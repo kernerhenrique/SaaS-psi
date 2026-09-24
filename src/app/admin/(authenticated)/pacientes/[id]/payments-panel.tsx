@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { StatTile } from "@/components/stat-tile";
 import { StatusBadge } from "@/components/status-badge";
 import { formatPriceFromCents } from "@/lib/currency";
@@ -6,8 +8,8 @@ import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_BADGE } from "@/lib/labels";
 import type { PatientSessionDto } from "@/server/modules/patient/patient.service";
 import { CircleCheck, HandCoins } from "lucide-react";
 
-/** Histórico de pagamentos do paciente (a edição do pagamento chega na etapa do Financeiro). */
-export function PaymentsPanel({ sessions }: { sessions: PatientSessionDto[] }) {
+/** Resumo dos pagamentos do paciente; a edição fica no Financeiro. */
+export function PaymentsPanel({ patientId, sessions }: { patientId: string; sessions: PatientSessionDto[] }) {
   // Só consultas realizadas (ou faltas) entram na conta; as agendadas ainda não geram cobrança.
   const billable = sessions.filter((s) => s.status === "DONE" || s.status === "NO_SHOW");
   const paid = billable.filter((s) => s.paymentStatus === "PAID").reduce((sum, s) => sum + s.amountCents, 0);
@@ -27,7 +29,7 @@ export function PaymentsPanel({ sessions }: { sessions: PatientSessionDto[] }) {
       ) : (
         <ul className="divide-y divide-border/70 rounded-2xl bg-card px-5 shadow-soft ring-1 ring-foreground/5">
           {billable.map((s) => (
-            <li key={s.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 py-4">
+            <li key={s.id} className="flex flex-col gap-2 py-4 sm:flex-row sm:items-center sm:gap-4">
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium">
                   {formatFullDate(s.date)} <span className="font-normal text-muted-foreground">· {s.typeName}</span>
@@ -42,14 +44,22 @@ export function PaymentsPanel({ sessions }: { sessions: PatientSessionDto[] }) {
                       : "Aguardando pagamento"}
                 </p>
               </div>
-              <StatusBadge status={PAYMENT_STATUS_BADGE[s.paymentStatus]} />
-              <p className="w-24 text-right text-sm font-semibold tabular-nums">{formatPriceFromCents(s.amountCents)}</p>
+              <div className="flex items-center gap-3 sm:gap-4">
+                <StatusBadge status={PAYMENT_STATUS_BADGE[s.paymentStatus]} />
+                <p className="flex-1 text-sm font-semibold tabular-nums sm:w-24 sm:flex-none sm:text-right">
+                  {formatPriceFromCents(s.amountCents)}
+                </p>
+              </div>
             </li>
           ))}
         </ul>
       )}
       <p className="text-xs text-muted-foreground">
-        Para registrar ou corrigir um pagamento, use a tela Financeiro (em construção).
+        Para registrar ou corrigir um pagamento,{" "}
+        <Link href={`/admin/financeiro?aba=paciente&paciente=${patientId}`} className="font-medium text-primary hover:underline">
+          abra o histórico no Financeiro
+        </Link>
+        .
       </p>
     </div>
   );

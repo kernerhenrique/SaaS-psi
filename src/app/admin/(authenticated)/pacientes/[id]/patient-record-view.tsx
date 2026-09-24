@@ -205,7 +205,7 @@ export function PatientRecordView({ record, today }: { record: PatientRecord; to
           </TabsPanel>
 
           <TabsPanel value="pagamentos">
-            <PaymentsPanel sessions={record.sessions} />
+            <PaymentsPanel patientId={record.id} sessions={record.sessions} />
           </TabsPanel>
         </Tabs>
       </FadeIn>

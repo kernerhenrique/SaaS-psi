@@ -161,6 +161,13 @@ export async function rescheduleSession(businessId: string, sessionId: string, s
 export async function setSessionStatus(businessId: string, sessionId: string, status: SessionStatus) {
   const session = await findSession(businessId, sessionId);
 
+  // Cancelada + paga faria o valor contar nos "Recebidos" de uma consulta que não aconteceu.
+  if (status === "CANCELLED" && session.paymentStatus === "PAID") {
+    throw new ValidationError(
+      "Esta consulta tem pagamento registrado. Mude o pagamento para “Ainda não recebi” ou “Não vai pagar” antes de cancelar.",
+    );
+  }
+
   let paymentStatus = session.paymentStatus;
   if ((status === "CANCELLED" || status === "NO_SHOW") && paymentStatus === "PENDING") paymentStatus = "WONT_PAY";
   if ((status === "SCHEDULED" || status === "DONE") && paymentStatus === "WONT_PAY") paymentStatus = "PENDING";

@@ -198,13 +198,14 @@ function SessionDetails({
             </div>
           ) : null}
 
-          {session.status === "DONE" ? (
+          {/* Também aparece em consulta agendada já paga (pagamento antecipado). */}
+          {session.status === "DONE" || session.paymentStatus === "PAID" ? (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-muted/60 p-3">
               <div className="text-sm">
                 <p className="font-medium">{formatPriceFromCents(session.amountCents)}</p>
                 <p className="text-xs text-muted-foreground">
                   {session.paymentStatus === "PAID"
-                    ? `Recebido${session.paymentMethod ? ` via ${PAYMENT_METHOD_LABELS[session.paymentMethod]}` : ""}${
+                    ? `${session.status === "SCHEDULED" ? "Pago antecipadamente" : "Recebido"}${session.paymentMethod ? ` via ${PAYMENT_METHOD_LABELS[session.paymentMethod]}` : ""}${
                         session.paidAt ? ` em ${session.paidAt.split("-").reverse().join("/")}` : ""
                       }`
                     : session.paymentStatus === "PENDING"
