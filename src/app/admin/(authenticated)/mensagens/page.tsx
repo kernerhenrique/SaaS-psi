@@ -1,5 +1,14 @@
-import { ComingSoon } from "@/components/coming-soon";
+import { requireAdminSession } from "@/server/modules/auth/session";
+import { getMessageTemplates } from "@/server/modules/message/message-template.service";
+import { listOutgoingMessages } from "@/server/modules/message/outgoing.service";
 
-export default function Page() {
-  return <ComingSoon title="Mensagens" description="Mensagens prontas para copiar e colar no WhatsApp." />;
+import { MessagesView } from "./messages-view";
+
+export default async function MessagesPage() {
+  const session = await requireAdminSession();
+  const [outgoing, templates] = await Promise.all([
+    listOutgoingMessages(session.businessId),
+    getMessageTemplates(session.businessId),
+  ]);
+  return <MessagesView outgoing={outgoing} templates={templates} />;
 }

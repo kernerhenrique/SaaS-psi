@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { cn } from "cn";
 
 import { CopyMessageButton } from "@/components/copy-message-button";
+import { WhatsAppButton } from "@/components/whatsapp-button";
 import { PatientAvatar } from "@/components/patient-avatar";
 import { PaymentForm, type PaymentValues } from "@/components/payment-form";
 import { StatusBadge } from "@/components/status-badge";
@@ -17,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiRequest } from "@/lib/api-client";
 import { formatPriceFromCents } from "@/lib/currency";
-import { formatDateLabel, minutesToTime } from "@/lib/date";
+import { formatDateLabel, friendlyDateLabel, minutesToTime } from "@/lib/date";
 import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_BADGE, SESSION_STATUS_BADGE } from "@/lib/labels";
 import { renderMessageTemplate } from "@/lib/message-template";
 import type { SessionStatus } from "@/generated/prisma/enums";
@@ -110,7 +111,7 @@ function SessionDetails({
   const reminder = renderMessageTemplate(reminderTemplate, {
     responsavel: firstName(session.guardianName),
     nomePaciente: firstName(session.patientName),
-    data: `${dateLabel.split(",")[0]} (${session.date.slice(8)}/${session.date.slice(5, 7)})`,
+    data: friendlyDateLabel(session.date, today, timezone),
     hora: minutesToTime(session.startMinute),
   });
 
@@ -228,7 +229,15 @@ function SessionDetails({
 
           <div className="grid gap-2 sm:grid-cols-2">
             {session.status === "SCHEDULED" ? (
-              <CopyMessageButton message={reminder} label="Copiar lembrete" className="h-10 rounded-xl" />
+              <>
+                <CopyMessageButton message={reminder} label="Copiar lembrete" className="h-10 rounded-xl" />
+                <WhatsAppButton
+                  phone={session.guardianPhone}
+                  message={reminder}
+                  size="default"
+                  className="h-10 rounded-xl"
+                />
+              </>
             ) : null}
             <Link href={`/admin/pacientes/${session.patientId}`} className={cn(buttonVariants({ variant: "outline" }), "h-10 rounded-xl")}>
               <FileText />

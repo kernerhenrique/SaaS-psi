@@ -142,6 +142,15 @@ export function formatDateLabel(dateISO: string, timeZone: string): string {
   }).format(noonUtc);
 }
 
+/** Data para mensagens: "hoje (24/09)", "amanhã (25/09)" ou "sexta-feira (02/10)". */
+export function friendlyDateLabel(dateISO: string, todayISO: string, timeZone: string): string {
+  const short = formatShortDate(dateISO);
+  const days = daysBetweenIsoDates(todayISO, dateISO);
+  if (days === 0) return `hoje (${short})`;
+  if (days === 1) return `amanhã (${short})`;
+  return `${formatDateLabel(dateISO, timeZone).split(",")[0]} (${short})`;
+}
+
 export function rangesOverlap(
   aStart: Date,
   aEnd: Date,

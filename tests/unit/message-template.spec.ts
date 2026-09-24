@@ -1,6 +1,35 @@
 import { describe, expect, it } from "vitest";
 
-import { buildWhatsAppLink, renderMessageTemplate } from "@/lib/message-template";
+import { friendlyDateLabel } from "@/lib/date";
+import {
+  buildWhatsAppLink,
+  DEFAULT_MESSAGE_TEMPLATES,
+  findInvalidVariables,
+  renderMessageTemplate,
+  TEMPLATE_KINDS,
+} from "@/lib/message-template";
+
+describe("findInvalidVariables", () => {
+  it("os modelos padrão só usam variáveis válidas", () => {
+    for (const kind of TEMPLATE_KINDS) {
+      expect(findInvalidVariables(DEFAULT_MESSAGE_TEMPLATES[kind], kind)).toEqual([]);
+    }
+  });
+
+  it("aponta variável com nome errado ou que não se aplica ao modelo", () => {
+    expect(findInvalidVariables("Oi {nome}, até {hora}", "reminder")).toEqual(["nome"]);
+    expect(findInvalidVariables("Valor: {valor}", "return-invite")).toEqual(["valor"]);
+    expect(findInvalidVariables("{} e {nome} e {nome}", "reminder")).toEqual(["", "nome"]);
+  });
+});
+
+describe("friendlyDateLabel", () => {
+  it("usa hoje, amanhã ou o dia da semana", () => {
+    expect(friendlyDateLabel("2026-09-24", "2026-09-24", "America/Sao_Paulo")).toBe("hoje (24/09)");
+    expect(friendlyDateLabel("2026-09-25", "2026-09-24", "America/Sao_Paulo")).toBe("amanhã (25/09)");
+    expect(friendlyDateLabel("2026-10-02", "2026-09-24", "America/Sao_Paulo")).toBe("sexta-feira (02/10)");
+  });
+});
 
 describe("renderMessageTemplate", () => {
   it("troca as variáveis conhecidas pelos valores", () => {

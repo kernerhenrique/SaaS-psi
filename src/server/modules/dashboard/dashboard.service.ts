@@ -40,6 +40,7 @@ export type DashboardAwaitingReturn = {
   patientId: string;
   patientName: string;
   guardianName: string | null;
+  guardianPhone: string | null;
   daysSinceLastSession: number;
 };
 
@@ -90,7 +91,7 @@ export async function getDashboardData(businessId: string): Promise<DashboardDat
 
   const guardiansSelect = { select: { name: true, isPrimary: true } } as const;
 
-  const [todaySessions, pendingSessions, monthReceived, patients, followUps] = await Promise.all([
+  const [todaySessions, pendingSessions, monthReceived, awaitingReturn, followUps] = await Promise.all([
     prisma.session.findMany({
       where: {
         businessId,
@@ -112,20 +113,7 @@ export async function getDashboardData(businessId: string): Promise<DashboardDat
       where: { businessId, paymentStatus: "PAID", paidAt: { gte: monthStart, lt: nextMonthStart } },
       _sum: { amountCents: true },
     }),
-    prisma.patient.findMany({
-      where: { businessId, deletedAt: null },
-      select: {
-        id: true,
-        fullName: true,
-        guardians: guardiansSelect,
-        sessions: {
-          where: { status: { in: ["DONE", "SCHEDULED"] } },
-          orderBy: { startAt: "desc" },
-          take: 1,
-          select: { status: true, startAt: true },
-        },
-      },
-    }),
+    listAwaitingReturn(businessId, timezone, today),
     prisma.followUpItem.findMany({
       where: { businessId, doneAt: null, deletedAt: null },
       orderBy: { createdAt: "asc" },
@@ -150,25 +138,6 @@ export async function getDashboardData(businessId: string): Promise<DashboardDat
       suggestReminder: shouldSuggestPaymentReminder(sessionDate, today, business.paymentReminderDays),
     };
   });
-
-  // A consulta mais recente (realizada ou agendada) decide: se for agendada, o
-  // paciente já tem retorno marcado; se for realizada há tempo suficiente, aparece aqui.
-  const awaitingReturn = patients
-    .flatMap((p) => {
-      const last = p.sessions[0];
-      if (!last || last.status !== "DONE") return [];
-      const days = daysBetweenIsoDates(utcToLocalDate(last.startAt, timezone), today);
-      if (days < RETURN_INVITE_AFTER_DAYS) return [];
-      return [
-        {
-          patientId: p.id,
-          patientName: p.fullName,
-          guardianName: primaryGuardianName(p.guardians),
-          daysSinceLastSession: days,
-        },
-      ];
-    })
-    .sort((a, b) => b.daysSinceLastSession - a.daysSinceLastSession);
 
   return {
     today,
@@ -199,4 +168,49 @@ export async function getDashboardData(businessId: string): Promise<DashboardDat
       todaySessionTime: todayTimeByPatient.get(f.patient.id) ?? null,
     })),
   };
+}
+
+/**
+ * Pacientes sem próxima consulta: a consulta mais recente (realizada ou
+ * agendada) decide — se for agendada, o retorno já está marcado; se for
+ * realizada há pelo menos RETURN_INVITE_AFTER_DAYS, o paciente aparece aqui.
+ */
+export async function listAwaitingReturn(
+  businessId: string,
+  timezone: string,
+  today: string,
+): Promise<DashboardAwaitingReturn[]> {
+  const patients = await prisma.patient.findMany({
+    where: { businessId, deletedAt: null },
+    select: {
+      id: true,
+      fullName: true,
+      guardians: { select: { name: true, phone: true, isPrimary: true } },
+      sessions: {
+        where: { status: { in: ["DONE", "SCHEDULED"] } },
+        orderBy: { startAt: "desc" },
+        take: 1,
+        select: { status: true, startAt: true },
+      },
+    },
+  });
+
+  return patients
+    .flatMap((p) => {
+      const last = p.sessions[0];
+      if (!last || last.status !== "DONE") return [];
+      const days = daysBetweenIsoDates(utcToLocalDate(last.startAt, timezone), today);
+      if (days < RETURN_INVITE_AFTER_DAYS) return [];
+      const guardian = p.guardians.find((g) => g.isPrimary) ?? p.guardians[0];
+      return [
+        {
+          patientId: p.id,
+          patientName: p.fullName,
+          guardianName: guardian?.name ?? null,
+          guardianPhone: guardian?.phone ?? null,
+          daysSinceLastSession: days,
+        },
+      ];
+    })
+    .sort((a, b) => b.daysSinceLastSession - a.daysSinceLastSession);
 }
