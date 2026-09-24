@@ -68,7 +68,7 @@ export function BottomNav() {
   const isActive = useIsActive();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-sidebar-border bg-sidebar/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 print:hidden border-t border-sidebar-border bg-sidebar/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden">
       {NAV_ITEMS.map((item) => {
         const active = isActive(item);
         const Icon = item.icon;

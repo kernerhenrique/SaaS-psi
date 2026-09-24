@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { NotebookPen, Pencil } from "lucide-react";
+import Link from "next/link";
+import { FileText, NotebookPen, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 import { EmptyState } from "@/components/empty-state";
 import { StatusBadge } from "@/components/status-badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { apiRequest } from "@/lib/api-client";
@@ -64,10 +65,16 @@ function SessionNoteCard({
         <div className="flex items-center gap-2">
           <StatusBadge status={SESSION_STATUS_BADGE[session.status]} />
           {canWrite && session.note && !isEditing ? (
-            <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
-              <Pencil />
-              Editar
-            </Button>
+            <>
+              <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
+                <Pencil />
+                Editar
+              </Button>
+              <Link href={`/admin/relatorios/${session.id}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
+                <FileText />
+                Relatório
+              </Link>
+            </>
           ) : null}
         </div>
       </header>

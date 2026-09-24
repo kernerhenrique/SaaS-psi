@@ -65,7 +65,7 @@ export function AppShell({ brand, children }: { brand: ShellBrand; children: Rea
       {/* Sidebar (desktop) */}
       <aside
         className={cn(
-          "sticky top-0 hidden h-dvh shrink-0 flex-col border-r border-sidebar-border bg-sidebar p-3 text-sidebar-foreground transition-[width] duration-200 ease-out sm:flex",
+          "sticky top-0 hidden h-dvh shrink-0 flex-col border-r print:hidden border-sidebar-border bg-sidebar p-3 text-sidebar-foreground transition-[width] duration-200 ease-out sm:flex",
           collapsed ? "w-[72px]" : "w-64",
         )}
       >
@@ -92,7 +92,7 @@ export function AppShell({ brand, children }: { brand: ShellBrand; children: Rea
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Topo (celular) */}
-        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-sidebar-border bg-sidebar/95 px-4 py-3 backdrop-blur sm:hidden">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b print:hidden border-sidebar-border bg-sidebar/95 px-4 py-3 backdrop-blur sm:hidden">
           <BrandMark brand={brand} />
           <div className="flex items-center gap-1">
             <ThemeToggle />
@@ -100,7 +100,7 @@ export function AppShell({ brand, children }: { brand: ShellBrand; children: Rea
           </div>
         </header>
 
-        <main className="flex-1 px-4 pt-6 pb-28 sm:px-8 sm:pt-10 sm:pb-12 lg:px-12">
+        <main className="flex-1 px-4 pt-6 pb-28 sm:px-8 sm:pt-10 sm:pb-12 lg:px-12 print:p-0">
           <div className="mx-auto w-full max-w-6xl">{children}</div>
         </main>
       </div>

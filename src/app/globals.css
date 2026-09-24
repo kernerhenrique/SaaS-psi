@@ -170,3 +170,19 @@
     @apply font-sans;
   }
 }
+
+/* Impressão (relatórios): papel branco, margens de A4 e sem sombras. */
+@media print {
+  @page {
+    size: A4;
+    margin: 18mm 16mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+    color: #1f1c17 !important;
+  }
+  .dark {
+    color-scheme: light;
+  }
+}
