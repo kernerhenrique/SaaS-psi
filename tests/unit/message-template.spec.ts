@@ -28,6 +28,10 @@ describe("buildWhatsAppLink", () => {
     );
   });
 
+  it("abre só a conversa quando não há mensagem", () => {
+    expect(buildWhatsAppLink("27998142609", "")).toBe("https://wa.me/5527998142609");
+  });
+
   it("não duplica o DDI quando o número já vem com ele", () => {
     expect(buildWhatsAppLink("+55 27 99814-2609", "Oi")).toBe("https://wa.me/5527998142609?text=Oi");
   });

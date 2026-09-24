@@ -1,5 +1,10 @@
-import { ComingSoon } from "@/components/coming-soon";
+import { requireAdminSession } from "@/server/modules/auth/session";
+import { listPatients } from "@/server/modules/patient/patient.service";
 
-export default function Page() {
-  return <ComingSoon title="Pacientes" description="Fichas, prontuário e responsáveis de cada paciente." />;
+import { PatientsView } from "./patients-view";
+
+export default async function PatientsPage() {
+  const session = await requireAdminSession();
+  const patients = await listPatients(session.businessId);
+  return <PatientsView patients={patients} />;
 }

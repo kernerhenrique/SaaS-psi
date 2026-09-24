@@ -106,6 +106,12 @@ export function formatShortDate(dateISO: string): string {
   return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}`;
 }
 
+/** "24/09/2026" a partir de "2026-09-24". */
+export function formatFullDate(dateISO: string): string {
+  const { year, month, day } = parseDateOnly(dateISO);
+  return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
+}
+
 /** Rótulo por extenso ("quinta-feira, 24 de setembro") de uma data YYYY-MM-DD no timezone informado. */
 export function formatDateLabel(dateISO: string, timeZone: string): string {
   const { year, month, day } = parseDateOnly(dateISO);

@@ -35,5 +35,6 @@ export function renderMessageTemplate(template: string, variables: Partial<Messa
 export function buildWhatsAppLink(phone: string, message: string): string {
   const digits = phone.replace(/\D/g, "");
   const withCountryCode = digits.length <= 11 ? `55${digits}` : digits;
-  return `https://wa.me/${withCountryCode}?text=${encodeURIComponent(message)}`;
+  const base = `https://wa.me/${withCountryCode}`;
+  return message ? `${base}?text=${encodeURIComponent(message)}` : base;
 }
