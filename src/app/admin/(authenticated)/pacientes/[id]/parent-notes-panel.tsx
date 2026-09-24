@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { apiRequest } from "@/lib/api-client";
 import { formatFullDate } from "@/lib/date";
 
-import { ConfirmButton } from "./confirm-button";
+import { ConfirmButton } from "@/components/confirm-button";
 
 type ParentNote = { id: string; date: string; content: string };
 

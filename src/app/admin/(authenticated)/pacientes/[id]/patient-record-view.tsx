@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { cn } from "cn";
 import {
   ArrowLeft,
+  CalendarPlus,
   ClipboardList,
   HeartPulse,
   MessageCircle,
@@ -18,7 +20,7 @@ import {
 
 import { FadeIn } from "@/components/fade-in";
 import { PatientAvatar } from "@/components/patient-avatar";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { formatFullDate } from "@/lib/date";
 import { buildWhatsAppLink } from "@/lib/message-template";
@@ -62,17 +64,26 @@ export function PatientRecordView({ record, today }: { record: PatientRecord; to
               </p>
             </div>
           </div>
-          <PatientFormDialog
-            patientId={record.id}
-            initialValues={record}
-            onSaved={refresh}
-            trigger={
-              <Button variant="outline" className="h-10 self-start rounded-xl px-4 sm:self-auto">
-                <Pencil />
-                Editar dados
-              </Button>
-            }
-          />
+          <div className="flex flex-wrap gap-2">
+            <PatientFormDialog
+              patientId={record.id}
+              initialValues={record}
+              onSaved={refresh}
+              trigger={
+                <Button variant="outline" className="h-10 rounded-xl px-4">
+                  <Pencil />
+                  Editar dados
+                </Button>
+              }
+            />
+            <Link
+              href={`/admin/agenda?nova=1&paciente=${record.id}`}
+              className={cn(buttonVariants(), "h-10 rounded-xl px-4")}
+            >
+              <CalendarPlus />
+              Marcar consulta
+            </Link>
+          </div>
         </div>
 
         {record.guardians.length > 0 ? (

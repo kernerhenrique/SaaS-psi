@@ -1,13 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-// Usa a conta do seed de desenvolvimento (npx prisma db seed).
-test.beforeEach(async ({ page }) => {
-  await page.goto("/admin/login");
-  await page.getByLabel("E-mail").fill("amanda@consultorio.dev");
-  await page.getByLabel("Senha").fill("consultorio123");
-  await page.getByRole("button", { name: "Entrar" }).click();
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Amanda");
-});
+// Já começa logado (sessão salva por auth.setup.ts).
 
 test("cadastra paciente e registra o prontuário", async ({ page }) => {
   const name = `João Teste ${Date.now()}`;

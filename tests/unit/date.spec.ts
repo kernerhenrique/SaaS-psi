@@ -6,6 +6,9 @@ import {
   formatShortDate,
   localDayRangeUtc,
   localMinutesToUtc,
+  minutesToTime,
+  startOfWeekIso,
+  timeToMinutes,
   utcToLocalMinutes,
 } from "@/lib/date";
 
@@ -34,6 +37,35 @@ describe("daysBetweenIsoDates", () => {
     expect(daysBetweenIsoDates("2026-08-30", "2026-09-02")).toBe(3);
     expect(daysBetweenIsoDates("2026-09-24", "2026-09-24")).toBe(0);
     expect(daysBetweenIsoDates("2026-09-25", "2026-09-24")).toBe(-1);
+  });
+});
+
+describe("startOfWeekIso", () => {
+  it("volta para a segunda-feira da mesma semana", () => {
+    expect(startOfWeekIso("2026-09-24")).toBe("2026-09-21"); // quinta → segunda
+    expect(startOfWeekIso("2026-09-21")).toBe("2026-09-21"); // já é segunda
+  });
+
+  it("trata domingo como fim da semana (não início)", () => {
+    expect(startOfWeekIso("2026-09-27")).toBe("2026-09-21");
+  });
+
+  it("atravessa a virada do mês", () => {
+    expect(startOfWeekIso("2026-10-01")).toBe("2026-09-28");
+  });
+});
+
+describe("timeToMinutes / minutesToTime", () => {
+  it("converte nos dois sentidos", () => {
+    expect(timeToMinutes("14:30")).toBe(870);
+    expect(minutesToTime(870)).toBe("14:30");
+    expect(minutesToTime(9 * 60)).toBe("09:00");
+  });
+
+  it("rejeita horários inválidos", () => {
+    expect(timeToMinutes("24:00")).toBeNull();
+    expect(timeToMinutes("9:00")).toBeNull();
+    expect(timeToMinutes("14:60")).toBeNull();
   });
 });
 

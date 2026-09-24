@@ -17,11 +17,13 @@ export function CopyMessageButton({
   label = "Copiar mensagem",
   variant = "outline",
   size = "default",
+  className,
 }: {
   message: string;
   label?: string;
   variant?: "default" | "outline" | "secondary" | "ghost";
   size?: "default" | "sm" | "lg";
+  className?: string;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -42,7 +44,7 @@ export function CopyMessageButton({
   }
 
   return (
-    <Button variant={variant} size={size} onClick={copy} aria-live="polite">
+    <Button variant={variant} size={size} onClick={copy} aria-live="polite" className={className}>
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
           key={copied ? "copied" : "copy"}

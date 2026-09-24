@@ -36,3 +36,6 @@ next-env.d.ts
 
 # identidade visual da cliente (só referência local, contém dados pessoais)
 docs/id-visual.pdf
+
+# sessão salva pelos testes E2E
+/playwright/.auth/

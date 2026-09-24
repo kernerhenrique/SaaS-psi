@@ -106,6 +106,24 @@ export function formatShortDate(dateISO: string): string {
   return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}`;
 }
 
+/** Segunda-feira da semana de uma data YYYY-MM-DD (a agenda começa a semana na segunda). */
+export function startOfWeekIso(dateISO: string): string {
+  const { year, month, day } = parseDateOnly(dateISO);
+  const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay(); // 0 = domingo
+  return addDaysToIsoDate(dateISO, weekday === 0 ? -6 : 1 - weekday);
+}
+
+/** "14:30" → 870 minutos desde 00:00; `null` se não for um horário válido. */
+export function timeToMinutes(time: string): number | null {
+  const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(time);
+  return match ? Number(match[1]) * 60 + Number(match[2]) : null;
+}
+
+/** 870 → "14:30". */
+export function minutesToTime(minutes: number): string {
+  return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+}
+
 /** "24/09/2026" a partir de "2026-09-24". */
 export function formatFullDate(dateISO: string): string {
   const { year, month, day } = parseDateOnly(dateISO);

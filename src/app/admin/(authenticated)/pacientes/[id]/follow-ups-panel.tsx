@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiRequest } from "@/lib/api-client";
 
-import { ConfirmButton } from "./confirm-button";
+import { ConfirmButton } from "@/components/confirm-button";
 
 type FollowUp = { id: string; text: string; doneAt: string | null; createdAt: string };
 

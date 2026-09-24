@@ -72,7 +72,7 @@ export default async function DashboardPage() {
             </>
           }
           actions={
-            <Link href="/admin/agenda" className={cn(buttonVariants({ size: "lg" }), "h-10 rounded-xl px-4")}>
+            <Link href="/admin/agenda?nova=1" className={cn(buttonVariants({ size: "lg" }), "h-10 rounded-xl px-4")}>
               <Plus />
               Nova consulta
             </Link>
