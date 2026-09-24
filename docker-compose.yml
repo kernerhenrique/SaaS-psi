@@ -1,13 +1,15 @@
+name: saas-psi
+
 services:
   postgres:
     image: postgres:16
     restart: unless-stopped
     environment:
-      POSTGRES_USER: agendamento
-      POSTGRES_PASSWORD: agendamento
-      POSTGRES_DB: agendamento
+      POSTGRES_USER: psi
+      POSTGRES_PASSWORD: psi
+      POSTGRES_DB: psi
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

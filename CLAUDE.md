@@ -1,71 +1,94 @@
 # Project Context
 
-Sistema de agendamento/reservas multi-tenant para negócios baseados em horário marcado (barbearias, salões, clínicas, consultórios). Projeto de portfólio — deve parecer um produto real e vendável, não um CRUD de estudo. Prioridade: UI moderna, fluxo de agendamento com fricção mínima, decisões de arquitetura defensáveis em entrevista técnica.
+Sistema de gestão de consultório para psicólogas (primeira cliente: Amanda Ribeiro, psicóloga infantil/adolescente/jovem, CRP 16/11644). É um fork do projeto `SaaS-agendamento` (remoto `upstream`), mas **sem agendamento público**: só a psicóloga usa o sistema. Ela combina as consultas pelo WhatsApp e as lança na agenda, registra prontuário, pagamentos, mensagens prontas e relatórios.
 
-Antes de qualquer mudança de arquitetura ou de schema, pare e proponha um plano. Antes de mexer na lógica de disponibilidade de horários, pergunte se há testes cobrindo o comportamento atual.
+A usuária **não é de tecnologia**: toda tela deve ser o mais didática possível (textos de ajuda curtos, poucos passos, linguagem do dia a dia, nada de jargão técnico).
 
-## About This Project
+Produto revendável para outras psicólogas: multi-tenant (`Business`) com marca configurável (logo, cor de destaque, nome, CRP). Nunca deixar a identidade da Amanda fixa no código.
 
-- Negócio (`Business`) cadastra profissionais, serviços e horário de funcionamento.
-- Cliente final agenda por uma página pública (`/{slug}`) **sem criar conta**.
-- Cancelamento/reagendamento do cliente é feito por um `manage_token` único por agendamento (UUID v4), nunca por login ou por ID sequencial na URL.
-- Documento de escopo completo (regras de negócio, personas, referências de UX): `docs/escopo-sistema-agendamento.md`.
+Escopo completo e regras de negócio: `docs/escopo-consultorio.md`. Identidade visual: `docs/id-visual.pdf`.
 
-## Referências para o projeto
+Antes de qualquer mudança de arquitetura ou de schema, pare e proponha um plano.
 
-Use sempre essas refferêcias para fazer as telas do projeto:
-**Referências de mercado (inspiração de UX, não para copiar visualmente):**
-- **Fresha** — referência principal para o fluxo de agendamento em si: seleção de serviço → profissional → data/hora em poucos passos, com resumo sempre visível lateralmente (desktop) ou fixo no rodapé (mobile).
-- **Calendly** — referência para simplicidade do calendário de disponibilidade e para o fluxo "sem conta" de quem agenda.
-- **Booksy / Treatwell** — referência para o painel do lado do negócio (agenda visual por profissional, cores por status de agendamento, bloqueios de horário).
-- **Cal.com** (open source) — bom para inspirar a página pública "clean" do negócio e o design system (tipografia grande, bastante espaço em branco, poucos elementos por tela).
+## Referências visuais (apenas visual, não copiar)
+
+1. https://www.psicomanager.com.br/individual
+2. https://uaicare.com.br/para-psicologos
+
+<!-- BEGIN orientações de design -->
+## Orientações de Design
+
+*DIREÇÃO DE DESIGN / UI*
+O sistema deve ter aparência de SaaS moderno (referências: SimplePractice,
+Linear, Notion, Cal.com), e não de painel administrativo tradicional
+com cara de HTML puro.
+
+*Estilo geral*
+- Layout arejado, com bastante espaço em branco e respiro entre blocos
+- Cantos arredondados (cards, botões, inputs, modais)
+- Sombras suaves e sutis em vez de bordas duras e linhas de tabela
+- Hierarquia visual clara: títulos fortes, textos secundários em tom
+  mais claro, poucas cores de destaque
+- Tom acolhedor e leve, adequado a uma psicóloga infantil, mas
+  profissional (nada infantilizado)
+
+*Componentes*
+- Sidebar lateral fixa com ícones + texto para navegação (Agenda,
+  Pacientes, Financeiro, Mensagens, Relatórios), recolhível
+- Cards no lugar de tabelas sempre que possível; quando tabela for
+  necessária, sem grade pesada, com linhas espaçadas e hover suave
+- Badges/tags coloridas para status (Pago, Pendente, Primeira consulta,
+  Retorno, Cancelado)
+- Avatares com iniciais do paciente
+- Estados vazios ilustrados e com orientação ("Nenhum paciente ainda —
+  cadastre o primeiro")
+- Skeleton loading em vez de telas brancas carregando
+- Toasts/notificações discretas para confirmações ("Pagamento
+  registrado", "Mensagem copiada")
+- Botão de copiar mensagem do WhatsApp com feedback visual imediato
+
+*Interação*
+- Microanimações e transições suaves (abrir modal, trocar de aba,
+  hover), sem exageros
+- Agenda visual em formato de calendário semanal/diário com blocos
+  coloridos por tipo de consulta, não uma lista
+- Dashboard inicial com resumo do dia: próximas consultas, pagamentos
+  pendentes, pacientes aguardando retorno
+- Totalmente responsivo: a psicóloga provavelmente vai usar muito no
+  celular entre atendimentos
+- Modo claro como padrão; modo escuro opcional
+
+Identidade visual (cartão da Amanda): fundo creme, texto marrom-oliva, títulos em fonte serifada, borboleta em pastéis (amarelo, verde-sálvia, salmão, cinza quente). Aplicar a cor apenas onde ajuda a psicóloga (botão primário, item ativo, badges) — o resto neutro, para funcionar com a marca de outra cliente.
+
+Antes de construir todas as telas, crie primeiro o design system
+(cores, tipografia, espaçamentos, componentes base) e uma tela de
+referência (o dashboard) para aprovação do visual.
+<!-- END orientações de design -->
 
 ## Stack
 
-- Frontend: Next.js + TypeScript + Tailwind CSS + shadcn/ui
-- Backend: NestJS (ou API Routes do Next.js) — Node.js + TypeScript
-- Banco: PostgreSQL via Prisma
-- Auth: JWT + bcrypt (apenas para admin do negócio; cliente final não autentica)
-- Testes: Vitest/Jest (unitário, foco em disponibilidade de horários) + Playwright (E2E do fluxo de agendamento)
-- Deploy: Vercel (app) + Railway/Render (Postgres)
-
-## Key Directories
-
-Estrutura alvo (criar conforme o projeto avança — ajustar esta seção quando divergir):
-
-```
-src/
-├── app/                  # rotas Next.js (painel admin e página pública)
-│   ├── (admin)/          # área autenticada do negócio
-│   └── [slug]/           # página pública de agendamento
-├── modules/
-│   ├── business/
-│   ├── professional/
-│   ├── service/
-│   ├── appointment/      # inclui lógica de slots disponíveis e manage_token
-│   └── auth/
-├── lib/                  # utilidades compartilhadas (datas, timezone, tokens)
-├── prisma/
-│   ├── schema.prisma
-│   └── migrations/
-└── tests/
-docs/
-└── escopo-sistema-agendamento.md
-```
+- Next.js 16 (App Router) + TypeScript + Tailwind CSS 4 + shadcn/ui, ícones Lucide, animações Framer Motion, toasts `sonner`
+- API Routes do Next.js; PostgreSQL via Prisma
+- Auth: JWT + bcrypt (só a psicóloga faz login)
+- IA: ditado da psicóloga **após** o atendimento (nunca gravar a sessão). Transcrição atrás da interface `TranscriptionProvider` (hoje Web Speech API do navegador; trocável por API paga). Organização do texto nos campos do prontuário via Claude API. Áudio nunca é armazenado; o resultado é sempre rascunho revisado pela psicóloga.
+- Testes: Vitest (unitário) + Playwright (E2E)
+- Banco local: `docker compose up -d` (porta **5433**, para não conflitar com o projeto base na 5432)
 
 ## Standards
 
 - TypeScript estrito (`strict: true`), sem `any` não justificado.
-- Toda rota pública de agendamento busca registros por `manage_token`/`slug`, nunca por ID numérico sequencial.
-- Toda lógica de cálculo de horário disponível deve ter teste unitário cobrindo: sobreposição de horários, timezone, duração variável por serviço, bloqueios manuais.
-- Isolamento multi-tenant: toda query de dados do negócio deve filtrar por `business_id` — nunca confiar apenas no ID do recurso filho.
+- Isolamento multi-tenant: toda query deve filtrar por `businessId` — nunca confiar apenas no ID do recurso filho.
+- Prontuário é dado sensível de saúde de menores (LGPD / CFP): sem exclusão definitiva (soft delete), campos de prontuário criptografados na aplicação, nada de dados clínicos em logs.
+- Pagamentos são feitos fora da plataforma: o sistema só registra e organiza, não processa transações.
 - Componentes de UI seguem o design system do shadcn/ui; evitar CSS solto fora do Tailwind.
 - Commits pequenos e descritivos (Conventional Commits: `feat:`, `fix:`, `refactor:`, `test:`).
 - Nunca commitar `.env`, chaves de API ou strings de conexão do banco.
+- Nunca alterar o repositório base (`upstream`); correções da base entram via `git cherry-pick`.
 
 ## Common Commands
 
 ```bash
+docker compose up -d     # sobe o Postgres local (porta 5433)
 npm run dev              # servidor de desenvolvimento
 npm run build            # build de produção
 npx prisma migrate dev   # aplicar migrations em dev
@@ -74,21 +97,9 @@ npm run test             # testes unitários
 npm run test:e2e         # testes end-to-end (Playwright)
 ```
 
-## Standard Workflow
+## Verificação
 
-Para qualquer tarefa não trivial, seguir nesta ordem:
-1. É uma pergunta sobre o estado atual do código, ou uma mudança? Se for dúvida, investigar antes de propor código.
-2. Precisa de plano antes de implementar? Para mudanças de schema, de fluxo de autenticação, ou da lógica de disponibilidade, sim — apresentar o plano e esperar confirmação.
-3. Falta alguma informação? Perguntar antes de assumir regra de negócio não descrita em `docs/escopo-sistema-agendamento.md`.
-4. Como validar? Definir o teste (unitário ou E2E) antes ou junto da implementação, especialmente em `appointment/`.
-
-Ordem de desenvolvimento recomendada: schema + migrations → API de disponibilidade de horários (com testes) → autenticação do admin → painel admin → página pública do cliente → fluxo de cancelamento por token → polimento de UI → deploy.
-
-## Notes
-
-- Cliente final nunca precisa de conta — essa é uma decisão de produto intencional, não uma lacuna a "corrigir".
-- `manage_token` deve ter expiração opcional e a rota que o consome deve responder com erro genérico quando o token é inválido (não revelar se o agendamento existe).
-- Cor de destaque e logo são configuráveis por negócio (personalização usada como diferencial de venda) — ao mexer em tema/estilo, preservar esse ponto de extensão.
+Toda tela nova é conferida no navegador pela extensão Claude in Chrome (largura de desktop e de celular) e sem erros no console, além de lint, build e testes.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
