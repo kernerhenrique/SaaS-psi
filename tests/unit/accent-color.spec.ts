@@ -37,7 +37,7 @@ describe("getAccentForeground", () => {
 
   it("usa texto claro sobre cores escuras", () => {
     expect(getAccentForeground("#000000")).toBe("oklch(0.985 0 0)");
-    expect(getAccentForeground(DEFAULT_ACCENT_COLOR)).toBe("oklch(0.985 0 0)"); // indigo
+    expect(getAccentForeground(DEFAULT_ACCENT_COLOR)).toBe("oklch(0.985 0 0)"); // sálvia escuro
   });
 });
 

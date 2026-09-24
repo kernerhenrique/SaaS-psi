@@ -7,9 +7,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-roboto);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-roboto);
+  --font-heading: var(--font-inter);
+  /* Serifada da identidade visual: só em títulos de página e números de destaque. */
+  --font-display: var(--font-crimson);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -40,6 +42,18 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* Tons pastel da identidade, usados em badges, avatares e blocos da agenda.
+     Cada tom tem um fundo suave e um texto escuro com contraste AA. */
+  --color-tone-sage: var(--tone-sage);
+  --color-tone-sage-foreground: var(--tone-sage-foreground);
+  --color-tone-honey: var(--tone-honey);
+  --color-tone-honey-foreground: var(--tone-honey-foreground);
+  --color-tone-peach: var(--tone-peach);
+  --color-tone-peach-foreground: var(--tone-peach-foreground);
+  --color-tone-sky: var(--tone-sky);
+  --color-tone-sky-foreground: var(--tone-sky-foreground);
+  --color-tone-stone: var(--tone-stone);
+  --color-tone-stone-foreground: var(--tone-stone-foreground);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -47,78 +61,102 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --shadow-soft: 0 1px 2px rgb(74 68 58 / 0.04), 0 4px 16px rgb(74 68 58 / 0.06);
 }
 
 :root {
-  --background: oklch(0.985 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  /* Série única dos gráficos de relatório (contraste validado contra o fundo do card). */
-  --viz-series-1: #2a78d6;
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: #f6f2ec;
+  --foreground: #3f3a32;
+  --card: #fffdf9;
+  --card-foreground: #3f3a32;
+  --popover: #fffdf9;
+  --popover-foreground: #3f3a32;
+  /* Cor de destaque padrão (verde-sálvia escurecido). Sobrescrita por
+     AccentColorScope com a cor escolhida por cada psicóloga. */
+  --primary: #5b7a57;
+  --primary-foreground: #fffdf9;
+  --secondary: #efe9e0;
+  --secondary-foreground: #3f3a32;
+  --muted: #efe9e0;
+  --muted-foreground: #756d61;
+  --accent: #efe9e0;
+  --accent-foreground: #3f3a32;
+  --destructive: #b4533f;
+  --border: #e7e0d5;
+  --input: #e2dacd;
+  --ring: #5b7a57;
+  --chart-1: #a9c0a5;
+  --chart-2: #e9d38f;
+  --chart-3: #efb0a1;
+  --chart-4: #bdb7ad;
+  --chart-5: #9fb7c9;
+  --viz-series-1: #5b7a57;
+  --radius: 0.75rem;
+  --sidebar: #fbf8f3;
+  --sidebar-foreground: #3f3a32;
+  --sidebar-primary: #5b7a57;
+  --sidebar-primary-foreground: #fffdf9;
+  --sidebar-accent: #f0eae1;
+  --sidebar-accent-foreground: #3f3a32;
+  --sidebar-border: #ebe4d9;
+  --sidebar-ring: #5b7a57;
+
+  --tone-sage: #e4ece1;
+  --tone-sage-foreground: #3d5a39;
+  --tone-honey: #f7edcc;
+  --tone-honey-foreground: #6e5412;
+  --tone-peach: #fbe4dc;
+  --tone-peach-foreground: #8a4331;
+  --tone-sky: #e1eaf1;
+  --tone-sky-foreground: #36526a;
+  --tone-stone: #ece8e2;
+  --tone-stone-foreground: #5c554b;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --viz-series-1: #3987e5;
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #1b1916;
+  --foreground: #ede7dd;
+  --card: #24211d;
+  --card-foreground: #ede7dd;
+  --popover: #24211d;
+  --popover-foreground: #ede7dd;
+  --primary: #9ab795;
+  --primary-foreground: #1b1916;
+  --secondary: #2e2a25;
+  --secondary-foreground: #ede7dd;
+  --muted: #2e2a25;
+  --muted-foreground: #aaa194;
+  --accent: #2e2a25;
+  --accent-foreground: #ede7dd;
+  --destructive: #e08a76;
+  --border: rgb(255 255 255 / 9%);
+  --input: rgb(255 255 255 / 14%);
+  --ring: #9ab795;
+  --chart-1: #9ab795;
+  --chart-2: #d9c07a;
+  --chart-3: #e39e8d;
+  --chart-4: #a39d93;
+  --chart-5: #8fa9bd;
+  --viz-series-1: #9ab795;
+  --sidebar: #201e1a;
+  --sidebar-foreground: #ede7dd;
+  --sidebar-primary: #9ab795;
+  --sidebar-primary-foreground: #1b1916;
+  --sidebar-accent: #2e2a25;
+  --sidebar-accent-foreground: #ede7dd;
+  --sidebar-border: rgb(255 255 255 / 8%);
+  --sidebar-ring: #9ab795;
+
+  --tone-sage: rgb(154 183 149 / 16%);
+  --tone-sage-foreground: #b8d1b3;
+  --tone-honey: rgb(233 211 143 / 14%);
+  --tone-honey-foreground: #e6d096;
+  --tone-peach: rgb(239 176 161 / 15%);
+  --tone-peach-foreground: #f0b8a9;
+  --tone-sky: rgb(159 183 201 / 15%);
+  --tone-sky-foreground: #b4cadb;
+  --tone-stone: rgb(189 183 173 / 13%);
+  --tone-stone-foreground: #cbc4b9;
 }
 
 @layer base {

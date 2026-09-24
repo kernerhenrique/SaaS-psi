@@ -1,11 +1,20 @@
 import type { Metadata } from "next";
-import { Roboto, Geist_Mono } from "next/font/google";
+import { Crimson_Pro, Geist_Mono, Inter } from "next/font/google";
+
+import { Toaster } from "@/components/ui/sonner";
+
 import "./globals.css";
 
-const roboto = Roboto({
-  variable: "--font-roboto",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
+});
+
+// Serifada próxima à do cartão da identidade visual; usada só em títulos.
+const crimsonPro = Crimson_Pro({
+  variable: "--font-crimson",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 const geistMono = Geist_Mono({
@@ -14,17 +23,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Agendamento online",
-  description: "Sistema de agendamento online para barbearias, salões e clínicas.",
+  title: "Consultório",
+  description: "Agenda, prontuário e financeiro para psicólogas.",
 };
 
 // Aplica o tema salvo (ou a preferência do sistema) antes da primeira pintura,
 // para não mostrar o tema errado por um instante (flash of wrong theme).
+// Modo claro é o padrão: só usa o escuro se a psicóloga escolheu.
 const THEME_INIT_SCRIPT = `
   try {
-    var stored = localStorage.getItem("theme");
-    var isDark = stored ? stored === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-    if (isDark) document.documentElement.classList.add("dark");
+    if (localStorage.getItem("theme") === "dark") document.documentElement.classList.add("dark");
   } catch (e) {}
 `;
 
@@ -33,12 +41,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="pt-BR"
       suppressHydrationWarning
-      className={`${roboto.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${crimsonPro.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }

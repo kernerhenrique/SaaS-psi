@@ -6,7 +6,7 @@ import { LogOut } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-export function LogoutButton() {
+export function LogoutButton({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -21,8 +21,16 @@ export function LogoutButton() {
     }
   }
 
+  if (compact) {
+    return (
+      <Button variant="ghost" size="icon-sm" onClick={handleLogout} disabled={isLoading} aria-label="Sair" title="Sair">
+        <LogOut />
+      </Button>
+    );
+  }
+
   return (
-    <Button variant="outline" onClick={handleLogout} disabled={isLoading}>
+    <Button variant="ghost" onClick={handleLogout} disabled={isLoading}>
       <LogOut />
       {isLoading ? "Saindo..." : "Sair"}
     </Button>
