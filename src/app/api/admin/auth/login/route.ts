@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { checkRateLimit, getClientIp, LOGIN_RATE_LIMIT } from "@/lib/rate-limit";
+import { ValidationError } from "@/server/errors";
+import { rateLimitedResponse } from "@/server/http";
 import { login } from "@/server/modules/auth/auth.service";
 import { setAuthCookies } from "@/server/modules/auth/cookies";
-import { ValidationError } from "@/server/errors";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -11,6 +13,14 @@ export async function POST(request: NextRequest) {
 
   if (!email || !password) {
     return NextResponse.json({ error: "Informe e-mail e senha" }, { status: 400 });
+  }
+
+  const rateLimit = checkRateLimit(
+    `login:${getClientIp(request.headers)}:${email.trim().toLowerCase()}`,
+    LOGIN_RATE_LIMIT,
+  );
+  if (!rateLimit.allowed) {
+    return rateLimitedResponse(rateLimit.retryAfterSeconds);
   }
 
   try {

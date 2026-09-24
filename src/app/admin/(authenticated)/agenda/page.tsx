@@ -1,44 +1,5 @@
-import { prisma } from "@/server/db/prisma";
-import { requireAdminSession } from "@/server/modules/auth/session";
+import { ComingSoon } from "@/components/coming-soon";
 
-import { AgendaView } from "./agenda-view";
-
-export default async function AgendaPage() {
-  const session = await requireAdminSession();
-
-  const [business, professionals] = await Promise.all([
-    prisma.business.findUniqueOrThrow({ where: { id: session.businessId } }),
-    prisma.professional.findMany({
-      where: { businessId: session.businessId, active: true, deletedAt: null },
-      orderBy: { name: "asc" },
-      include: {
-        professionalServices: { include: { service: true } },
-        workingHours: {
-          select: {
-            weekday: true,
-            startMinute: true,
-            endMinute: true,
-            breakStartMinute: true,
-            breakEndMinute: true,
-          },
-        },
-      },
-    }),
-  ]);
-
-  const professionalOptions = professionals.map((professional) => ({
-    id: professional.id,
-    name: professional.name,
-    photoUrl: professional.photoUrl,
-    services: professional.professionalServices
-      .filter((ps) => ps.service.active && !ps.service.deletedAt)
-      .map((ps) => ({
-        id: ps.service.id,
-        name: ps.service.name,
-        durationMin: ps.service.durationMin,
-      })),
-    workingHours: professional.workingHours,
-  }));
-
-  return <AgendaView timezone={business.timezone} professionals={professionalOptions} />;
+export default function Page() {
+  return <ComingSoon title="Agenda" description="Calendário semanal e diário das consultas." />;
 }

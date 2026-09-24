@@ -1,7 +1,47 @@
 import { describe, expect, it } from "vitest";
 
-import { Weekday } from "@/generated/prisma/enums";
-import { localDayRangeUtc, localMinutesToUtc, utcToLocalMinutes, weekdayOfLocalDate } from "@/lib/date";
+import {
+  ageInYears,
+  daysBetweenIsoDates,
+  formatShortDate,
+  localDayRangeUtc,
+  localMinutesToUtc,
+  utcToLocalMinutes,
+} from "@/lib/date";
+
+describe("ageInYears", () => {
+  it("conta o ano quando o aniversário já passou", () => {
+    expect(ageInYears("2018-03-10", "2026-09-24")).toBe(8);
+  });
+
+  it("não conta o ano antes do aniversário", () => {
+    expect(ageInYears("2013-12-01", "2026-09-24")).toBe(12);
+  });
+
+  it("conta o ano no próprio dia do aniversário", () => {
+    expect(ageInYears("2013-09-24", "2026-09-24")).toBe(13);
+  });
+
+  it("trata quem nasceu em 29/02 em ano não bissexto", () => {
+    expect(ageInYears("2016-02-29", "2026-02-28")).toBe(9);
+    expect(ageInYears("2016-02-29", "2026-03-01")).toBe(10);
+  });
+});
+
+describe("daysBetweenIsoDates", () => {
+  it("conta dias de calendário, inclusive virando o mês", () => {
+    expect(daysBetweenIsoDates("2026-09-18", "2026-09-24")).toBe(6);
+    expect(daysBetweenIsoDates("2026-08-30", "2026-09-02")).toBe(3);
+    expect(daysBetweenIsoDates("2026-09-24", "2026-09-24")).toBe(0);
+    expect(daysBetweenIsoDates("2026-09-25", "2026-09-24")).toBe(-1);
+  });
+});
+
+describe("formatShortDate", () => {
+  it("formata como dia/mês", () => {
+    expect(formatShortDate("2026-09-04")).toBe("04/09");
+  });
+});
 
 describe("utcToLocalMinutes", () => {
   it("converte um instante UTC para minutos no horário local de São Paulo", () => {
@@ -58,14 +98,5 @@ describe("localDayRangeUtc", () => {
     const { start, end } = localDayRangeUtc("2026-09-24", "America/Sao_Paulo");
     expect(start.toISOString()).toBe("2026-09-24T03:00:00.000Z");
     expect(end.toISOString()).toBe("2026-09-25T03:00:00.000Z");
-  });
-});
-
-describe("weekdayOfLocalDate", () => {
-  it("calcula o dia da semana de uma data de calendário", () => {
-    // 2026-09-24 é uma quinta-feira.
-    expect(weekdayOfLocalDate("2026-09-24")).toBe(Weekday.THURSDAY);
-    expect(weekdayOfLocalDate("2026-09-25")).toBe(Weekday.FRIDAY);
-    expect(weekdayOfLocalDate("2026-09-27")).toBe(Weekday.SUNDAY);
   });
 });

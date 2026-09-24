@@ -12,13 +12,20 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect("/admin/login");
   }
 
-  const business = await prisma.business.findUniqueOrThrow({
+  // O access token só é verificado pela assinatura; se a conta deixou de existir
+  // (ex.: banco de dev recriado) manda para o login em vez de quebrar a página.
+  const business = await prisma.business.findUnique({
     where: { id: session.businessId },
   });
+  if (!business) {
+    redirect("/admin/login");
+  }
+
+  const subtitle = business.crp ? `Psicóloga · ${business.crp}` : "Psicóloga";
 
   return (
     <AccentColorScope accentColor={business.accentColor} className="flex flex-1 flex-col">
-      <AppShell brand={{ name: business.name, subtitle: "Psicóloga", logoUrl: business.logoUrl }}>
+      <AppShell brand={{ name: business.name, subtitle, logoUrl: business.logoUrl }}>
         {children}
       </AppShell>
     </AccentColorScope>

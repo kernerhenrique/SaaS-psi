@@ -7,7 +7,7 @@ import {
   instantRangeToDayMinutes,
   minutesToHeightPx,
   minutesToTopPx,
-} from "@/app/admin/(authenticated)/agenda/schedule-grid-math";
+} from "@/lib/schedule-grid-math";
 import { localDayRangeUtc } from "@/lib/date";
 
 describe("instantRangeToDayMinutes", () => {

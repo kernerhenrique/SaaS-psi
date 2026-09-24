@@ -89,7 +89,7 @@ referência (o dashboard) para aprovação do visual.
 
 ```bash
 docker compose up -d     # sobe o Postgres local (porta 5433)
-npm run dev              # servidor de desenvolvimento
+npm run dev              # servidor de desenvolvimento (http://localhost:3001)
 npm run build            # build de produção
 npx prisma migrate dev   # aplicar migrations em dev
 npx prisma studio        # inspecionar dados

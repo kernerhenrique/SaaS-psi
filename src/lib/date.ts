@@ -1,17 +1,5 @@
 import { fromZonedTime } from "date-fns-tz";
 
-import { Weekday } from "@/generated/prisma/enums";
-
-const WEEKDAYS_BY_JS_INDEX: Weekday[] = [
-  Weekday.SUNDAY,
-  Weekday.MONDAY,
-  Weekday.TUESDAY,
-  Weekday.WEDNESDAY,
-  Weekday.THURSDAY,
-  Weekday.FRIDAY,
-  Weekday.SATURDAY,
-];
-
 const DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 function parseDateOnly(dateISO: string): { year: number; month: number; day: number } {
@@ -56,16 +44,6 @@ export function localDayRangeUtc(dateISO: string, timeZone: string): { start: Da
 }
 
 /**
- * Dia da semana (enum Weekday) de uma data de calendário YYYY-MM-DD. O dia da
- * semana de uma data de calendário não depende de timezone — "24/09/2026" é
- * quinta-feira em qualquer lugar — então basta calculá-lo em UTC puro.
- */
-export function weekdayOfLocalDate(dateISO: string): Weekday {
-  const { year, month, day } = parseDateOnly(dateISO);
-  return WEEKDAYS_BY_JS_INDEX[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
-}
-
-/**
  * Minutos desde 00:00 local (no timezone informado) que um instante UTC
  * representa. Usa Intl em vez de `toZonedTime` + getters de `Date`: o
  * resultado daquele depende do timezone do processo (servidor ou navegador),
@@ -102,6 +80,30 @@ export function todayInTimeZone(timeZone: string): string {
 export function addDaysToIsoDate(dateISO: string, days: number): string {
   const { year, month, day } = parseDateOnly(dateISO);
   return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10);
+}
+
+/** Dias de calendário de `fromISO` até `toISO` (negativo se `toISO` vier antes). */
+export function daysBetweenIsoDates(fromISO: string, toISO: string): number {
+  const from = parseDateOnly(fromISO);
+  const to = parseDateOnly(toISO);
+  const msPerDay = 24 * 60 * 60 * 1000;
+  return Math.round(
+    (Date.UTC(to.year, to.month - 1, to.day) - Date.UTC(from.year, from.month - 1, from.day)) / msPerDay,
+  );
+}
+
+/** Idade em anos completos na data `todayISO` (aniversário ainda não chegou → não conta o ano). */
+export function ageInYears(birthDateISO: string, todayISO: string): number {
+  const birth = parseDateOnly(birthDateISO);
+  const today = parseDateOnly(todayISO);
+  const hadBirthdayThisYear = today.month > birth.month || (today.month === birth.month && today.day >= birth.day);
+  return today.year - birth.year - (hadBirthdayThisYear ? 0 : 1);
+}
+
+/** "24/09" a partir de "2026-09-24". */
+export function formatShortDate(dateISO: string): string {
+  const { month, day } = parseDateOnly(dateISO);
+  return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}`;
 }
 
 /** Rótulo por extenso ("quinta-feira, 24 de setembro") de uma data YYYY-MM-DD no timezone informado. */

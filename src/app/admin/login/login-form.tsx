@@ -51,7 +51,7 @@ export function LoginForm() {
           <CalendarClock className="size-6" />
         </div>
         <CardTitle className="text-lg">Entrar</CardTitle>
-        <CardDescription>Painel do negócio</CardDescription>
+        <CardDescription>Acesse a agenda e os prontuários do seu consultório</CardDescription>
       </CardHeader>
       <CardContent>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>

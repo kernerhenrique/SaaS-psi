@@ -6,8 +6,8 @@ interface RateLimitEntry {
 // Next.js/Turbopack pode compilar Route Handlers e Server Components de
 // página em módulos separados — um `const buckets = new Map()` no topo do
 // módulo não é necessariamente a MESMA instância entre eles, mesmo dentro do
-// mesmo processo (confirmado: um limite ficava "furado" entre a página de
-// gerenciamento e as rotas de API que deveriam compartilhar o mesmo balde).
+// mesmo processo (confirmado: um limite ficava "furado" entre páginas e
+// rotas de API que deveriam compartilhar o mesmo balde).
 // Guardar em `globalThis` garante uma única instância por processo,
 // independente de qual módulo/chunk a importa (mesmo padrão do singleton do
 // PrismaClient em src/server/db/prisma.ts).
@@ -49,8 +49,8 @@ export function checkRateLimit(
   return { allowed: true, retryAfterSeconds: 0 };
 }
 
-/** Limite compartilhado por todas as rotas que recebem o manage_token. */
-export const MANAGE_TOKEN_RATE_LIMIT = { limit: 20, windowMs: 5 * 60 * 1000 };
+/** Tentativas de login por IP + e-mail: dificulta adivinhar a senha por força bruta. */
+export const LOGIN_RATE_LIMIT = { limit: 10, windowMs: 15 * 60 * 1000 };
 
 export function getClientIp(headers: Headers): string {
   const forwarded = headers.get("x-forwarded-for");
