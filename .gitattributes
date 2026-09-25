@@ -1,0 +1,5 @@
+# Finais de linha LF no repositório e na cópia local (evita os avisos de CRLF no Windows).
+* text=auto eol=lf
+*.png binary
+*.ico binary
+*.pdf binary

@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import type { PaymentRow } from "@/lib/finance";
 import { NotFoundError } from "@/server/errors";
 import { requireAdminSession } from "@/server/modules/auth/session";
@@ -8,6 +10,8 @@ import { getAgendaOptions } from "@/server/modules/session/session.service";
 
 import { FinanceView, type FinanceTab } from "./finance-view";
 import { parsePeriod, periodRange } from "./period";
+
+export const metadata: Metadata = { title: "Financeiro" };
 
 export default async function FinancePage({ searchParams }: PageProps<"/admin/financeiro">) {
   const session = await requireAdminSession();

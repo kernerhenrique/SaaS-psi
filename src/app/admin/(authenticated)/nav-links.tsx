@@ -7,6 +7,7 @@ import {
   FileText,
   House,
   MessageCircle,
+  Settings,
   Users,
   Wallet,
   type LucideIcon,
@@ -25,6 +26,9 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/admin/relatorios", label: "Relatórios", icon: FileText },
 ];
 
+// Fora da barra inferior do celular (lá vira um ícone no topo).
+export const SETTINGS_ITEM: NavItem = { href: "/admin/configuracoes", label: "Configurações", icon: Settings };
+
 function useIsActive() {
   const pathname = usePathname();
   return (item: NavItem) =>
@@ -36,8 +40,8 @@ export function SidebarNav({ collapsed }: { collapsed: boolean }) {
   const isActive = useIsActive();
 
   return (
-    <nav className="flex flex-col gap-1">
-      {NAV_ITEMS.map((item) => {
+    <nav className="flex flex-col gap-1" aria-label="Menu principal">
+      {[...NAV_ITEMS, SETTINGS_ITEM].map((item) => {
         const active = isActive(item);
         const Icon = item.icon;
         return (
@@ -47,7 +51,8 @@ export function SidebarNav({ collapsed }: { collapsed: boolean }) {
             title={collapsed ? item.label : undefined}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors",
+              "flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+              item === SETTINGS_ITEM && "mt-3",
               collapsed && "justify-center px-0",
               active
                 ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-soft"
@@ -68,7 +73,7 @@ export function BottomNav() {
   const isActive = useIsActive();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 print:hidden border-t border-sidebar-border bg-sidebar/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden">
+    <nav aria-label="Menu principal" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 print:hidden border-t border-sidebar-border bg-sidebar/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden">
       {NAV_ITEMS.map((item) => {
         const active = isActive(item);
         const Icon = item.icon;
@@ -78,7 +83,7 @@ export function BottomNav() {
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex flex-col items-center gap-1 py-2 text-[10px] font-medium transition-colors",
+              "flex flex-col items-center gap-1 py-2 text-[10px] font-medium transition-colors outline-none focus-visible:bg-sidebar-accent",
               active ? "text-primary" : "text-muted-foreground",
             )}
           >

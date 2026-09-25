@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { CopyMessageButton } from "@/components/copy-message-button";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
@@ -10,6 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 
 import { ToastDemo } from "./toast-demo";
+
+export const metadata: Metadata = { title: "Design system" };
 
 // Página de referência do design system (não aparece no menu).
 // Serve para aprovar o visual e para conferir os componentes ao mudar o tema.

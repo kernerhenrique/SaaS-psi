@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import Link from "next/link";
+import { PanelLeftClose, PanelLeftOpen, Settings } from "lucide-react";
 
 import { cn } from "cn";
 
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { getInitials } from "@/lib/text";
 
 import { LogoutButton } from "./logout-button";
@@ -62,6 +63,14 @@ export function AppShell({ brand, children }: { brand: ShellBrand; children: Rea
 
   return (
     <div className="flex flex-1">
+      {/* Atalho para quem navega pelo teclado ou leitor de tela. */}
+      <a
+        href="#conteudo"
+        className="sr-only z-50 rounded-lg bg-primary px-4 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+      >
+        Pular para o conteúdo
+      </a>
+
       {/* Sidebar (desktop) */}
       <aside
         className={cn(
@@ -95,12 +104,20 @@ export function AppShell({ brand, children }: { brand: ShellBrand; children: Rea
         <header className="sticky top-0 z-30 flex items-center justify-between border-b print:hidden border-sidebar-border bg-sidebar/95 px-4 py-3 backdrop-blur sm:hidden">
           <BrandMark brand={brand} />
           <div className="flex items-center gap-1">
+            <Link
+              href="/admin/configuracoes"
+              aria-label="Configurações"
+              title="Configurações"
+              className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
+            >
+              <Settings />
+            </Link>
             <ThemeToggle />
             <LogoutButton compact />
           </div>
         </header>
 
-        <main className="flex-1 px-4 pt-6 pb-28 sm:px-8 sm:pt-10 sm:pb-12 lg:px-12 print:p-0">
+        <main id="conteudo" tabIndex={-1} className="flex-1 outline-none px-4 pt-6 pb-28 sm:px-8 sm:pt-10 sm:pb-12 lg:px-12 print:p-0">
           <div className="mx-auto w-full max-w-6xl">{children}</div>
         </main>
       </div>

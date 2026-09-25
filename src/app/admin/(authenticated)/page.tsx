@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CalendarCheck, CalendarDays, Clock, HandCoins, Plus, Sparkles, Wallet } from "lucide-react";
@@ -18,6 +19,8 @@ import { prisma } from "@/server/db/prisma";
 import { requireAdminSession } from "@/server/modules/auth/session";
 import { getDashboardData, RETURN_INVITE_AFTER_DAYS } from "@/server/modules/dashboard/dashboard.service";
 import { getMessageTemplates } from "@/server/modules/message/message-template.service";
+
+export const metadata: Metadata = { title: "Início" };
 
 function greetingFor(localMinutes: number): string {
   const hour = Math.floor(localMinutes / 60);

@@ -13,6 +13,7 @@ export default defineConfig({
   // Em desenvolvimento o Next compila cada página no primeiro acesso (pode levar ~20s).
   timeout: 90_000,
   reporter: "list",
+  globalTeardown: "./tests/e2e/global-teardown.ts",
   use: {
     baseURL: "http://localhost:3001",
     trace: "retain-on-failure",

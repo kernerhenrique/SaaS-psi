@@ -23,7 +23,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Consultório",
+  title: { default: "Consultório", template: "%s · Consultório" },
   description: "Agenda, prontuário e financeiro para psicólogas.",
 };
 

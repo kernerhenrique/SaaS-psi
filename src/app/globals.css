@@ -73,33 +73,33 @@
   --popover-foreground: #3f3a32;
   /* Cor de destaque padrão (verde-sálvia escurecido). Sobrescrita por
      AccentColorScope com a cor escolhida por cada psicóloga. */
-  --primary: #5b7a57;
+  --primary: #55724f;
   --primary-foreground: #fffdf9;
   --secondary: #efe9e0;
   --secondary-foreground: #3f3a32;
   --muted: #efe9e0;
-  --muted-foreground: #756d61;
+  --muted-foreground: #6a6256;
   --accent: #efe9e0;
   --accent-foreground: #3f3a32;
-  --destructive: #b4533f;
+  --destructive: #a4452f;
   --border: #e7e0d5;
   --input: #e2dacd;
-  --ring: #5b7a57;
+  --ring: #55724f;
   --chart-1: #a9c0a5;
   --chart-2: #e9d38f;
   --chart-3: #efb0a1;
   --chart-4: #bdb7ad;
   --chart-5: #9fb7c9;
-  --viz-series-1: #5b7a57;
+  --viz-series-1: #55724f;
   --radius: 0.75rem;
   --sidebar: #fbf8f3;
   --sidebar-foreground: #3f3a32;
-  --sidebar-primary: #5b7a57;
+  --sidebar-primary: #55724f;
   --sidebar-primary-foreground: #fffdf9;
   --sidebar-accent: #f0eae1;
   --sidebar-accent-foreground: #3f3a32;
   --sidebar-border: #ebe4d9;
-  --sidebar-ring: #5b7a57;
+  --sidebar-ring: #55724f;
 
   --tone-sage: #e4ece1;
   --tone-sage-foreground: #3d5a39;

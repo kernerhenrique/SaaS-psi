@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { startOfWeekIso } from "@/lib/date";
 import { requireAdminSession } from "@/server/modules/auth/session";
 import { getBusinessToday } from "@/server/modules/business/business.service";
@@ -6,6 +8,8 @@ import { getAgendaOptions, listSessionsForRange, weekRange } from "@/server/modu
 import { prisma } from "@/server/db/prisma";
 
 import { AgendaView } from "./agenda-view";
+
+export const metadata: Metadata = { title: "Agenda" };
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 

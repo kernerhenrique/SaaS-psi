@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight, FilePen, FileText } from "lucide-react";
 
@@ -8,6 +9,8 @@ import { PatientAvatar } from "@/components/patient-avatar";
 import { formatFullDate } from "@/lib/date";
 import { requireAdminSession } from "@/server/modules/auth/session";
 import { listReports, type ReportListItem } from "@/server/modules/report/report.service";
+
+export const metadata: Metadata = { title: "Relatórios" };
 
 export default async function ReportsPage() {
   const session = await requireAdminSession();

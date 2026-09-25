@@ -4,12 +4,22 @@ import { expect, test } from "@playwright/test";
 test("sugere mensagens e permite editar e restaurar um modelo", async ({ page }) => {
   await page.goto("/admin/mensagens");
 
-  // A cobrança da Sofia (pendente há 6 dias no seed) abre o WhatsApp da mãe com o texto pronto.
-  const sofia = page.getByRole("listitem").filter({ hasText: "Sofia Martins" }).filter({ hasText: "R$ 200,00" });
-  const whatsapp = sofia.getByRole("link", { name: "Abrir no WhatsApp" });
-  await expect(whatsapp).toHaveAttribute("href", /^https:\/\/wa\.me\/5527999110005\?text=Ol%C3%A1%2C%20Renata/);
+  // A cobrança do Gabriel (pendente há 4 dias no seed) abre o WhatsApp do pai com o texto pronto.
+  // (Não usa a da Sofia: o teste do Financeiro mexe nela em paralelo.)
+  const gabriel = page.getByRole("listitem").filter({ hasText: "Gabriel Rocha" }).filter({ hasText: "R$ 250,00" });
+  const whatsapp = gabriel.getByRole("link", { name: "Abrir no WhatsApp" });
+  await expect(whatsapp).toHaveAttribute("href", /^https:\/\/wa\.me\/5527999110006\?text=Ol%C3%A1%2C%20Andr%C3%A9/);
 
   const editor = page.getByLabel("Convite para retorno");
+  // Se uma execução anterior deixou o modelo personalizado, começa do texto padrão.
+  const restoreFirst = page
+    .locator("section")
+    .filter({ has: editor })
+    .getByRole("button", { name: "Restaurar texto padrão" });
+  if (await restoreFirst.isVisible()) {
+    await restoreFirst.click();
+    await expect(page.getByText("Texto padrão restaurado")).toBeVisible();
+  }
   const original = await editor.inputValue();
 
   // Variável escrita errado: aviso e botão de salvar desabilitado.

@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 
 // Verde-sálvia escurecido da identidade padrão; cada psicóloga pode trocar a sua.
-export const DEFAULT_ACCENT_COLOR = "#5B7A57";
+export const DEFAULT_ACCENT_COLOR = "#55724F";
 
 const HEX_PATTERN = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i;
 

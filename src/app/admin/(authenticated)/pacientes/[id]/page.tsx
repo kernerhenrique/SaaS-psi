@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { NotFoundError } from "@/server/errors";
@@ -7,6 +8,8 @@ import { isAiConfigured } from "@/server/modules/dictation/organize.service";
 import { getPatientRecord, type PatientRecord } from "@/server/modules/patient/patient.service";
 
 import { PatientRecordView } from "./patient-record-view";
+
+export const metadata: Metadata = { title: "Ficha do paciente" };
 
 export default async function PatientRecordPage({ params }: PageProps<"/admin/pacientes/[id]">) {
   const session = await requireAdminSession();
