@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { FileText, NotebookPen, Pencil } from "lucide-react";
+import { FileText, Mic, NotebookPen, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 import { EmptyState } from "@/components/empty-state";
@@ -15,14 +15,20 @@ import { formatFullDate } from "@/lib/date";
 import { SESSION_STATUS_BADGE } from "@/lib/labels";
 import type { PatientSessionDto } from "@/server/modules/patient/patient.service";
 
+import { DictationPanel } from "./dictation-panel";
+
 export function SessionNotesList({
   sessions,
+  patientId,
   today,
+  aiEnabled,
   emptyText,
   onChanged,
 }: {
   sessions: PatientSessionDto[];
+  patientId: string;
   today: string;
+  aiEnabled: boolean;
   emptyText: string;
   onChanged: () => void;
 }) {
@@ -33,23 +39,29 @@ export function SessionNotesList({
     <ul className="space-y-4">
       {sessions.map((s) => (
         <li key={s.id}>
-          <SessionNoteCard session={s} today={today} onChanged={onChanged} />
+          <SessionNoteCard session={s} patientId={patientId} today={today} aiEnabled={aiEnabled} onChanged={onChanged} />
         </li>
       ))}
     </ul>
   );
 }
 
+type CardMode = "view" | "edit" | "dictate";
+
 function SessionNoteCard({
   session,
+  patientId,
   today,
+  aiEnabled,
   onChanged,
 }: {
   session: PatientSessionDto;
+  patientId: string;
   today: string;
+  aiEnabled: boolean;
   onChanged: () => void;
 }) {
-  const [isEditing, setIsEditing] = useState(false);
+  const [mode, setMode] = useState<CardMode>("view");
   const isFuture = session.date > today;
   const canWrite = !isFuture && (session.status === "DONE" || session.status === "SCHEDULED");
 
@@ -62,11 +74,15 @@ function SessionNoteCard({
           </p>
           <p className="text-xs text-muted-foreground">{session.typeName}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={SESSION_STATUS_BADGE[session.status]} />
-          {canWrite && session.note && !isEditing ? (
+          {canWrite && session.note && mode === "view" ? (
             <>
-              <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
+              <Button variant="ghost" size="sm" onClick={() => setMode("dictate")}>
+                <Mic />
+                Ditar
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setMode("edit")}>
                 <Pencil />
                 Editar
               </Button>
@@ -87,8 +103,20 @@ function SessionNoteCard({
         <p className="text-sm text-muted-foreground">
           Consulta marcada. As anotações ficam disponíveis a partir do dia do atendimento.
         </p>
-      ) : isEditing ? (
-        <NoteEditor session={session} onDone={() => setIsEditing(false)} onChanged={onChanged} />
+      ) : mode === "dictate" ? (
+        <DictationPanel
+          sessionId={session.id}
+          patientId={patientId}
+          aiEnabled={aiEnabled}
+          hasExistingNote={Boolean(session.note)}
+          onCancel={() => setMode("view")}
+          onSaved={() => {
+            setMode("view");
+            onChanged();
+          }}
+        />
+      ) : mode === "edit" ? (
+        <NoteEditor session={session} onDone={() => setMode("view")} onChanged={onChanged} />
       ) : session.note ? (
         <div className="grid gap-4 md:grid-cols-2">
           <NoteBlock title="O que os pais relataram" text={session.note.parentReport} />
@@ -97,10 +125,16 @@ function SessionNoteCard({
       ) : (
         <div className="flex flex-col items-start gap-3 rounded-xl bg-muted/60 p-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">Nenhuma anotação desta consulta ainda.</p>
-          <Button onClick={() => setIsEditing(true)}>
-            <NotebookPen />
-            Escrever anotações
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setMode("edit")}>
+              <NotebookPen />
+              Escrever anotações
+            </Button>
+            <Button onClick={() => setMode("dictate")}>
+              <Mic />
+              Ditar anotações
+            </Button>
+          </div>
         </div>
       )}
     </article>

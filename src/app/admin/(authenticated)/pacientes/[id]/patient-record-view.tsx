@@ -33,7 +33,15 @@ import { ParentNotesPanel } from "./parent-notes-panel";
 import { PaymentsPanel } from "./payments-panel";
 import { SessionNotesList } from "./session-note-card";
 
-export function PatientRecordView({ record, today }: { record: PatientRecord; today: string }) {
+export function PatientRecordView({
+  record,
+  today,
+  aiEnabled,
+}: {
+  record: PatientRecord;
+  today: string;
+  aiEnabled: boolean;
+}) {
   const router = useRouter();
   const refresh = () => router.refresh();
 
@@ -185,7 +193,9 @@ export function PatientRecordView({ record, today }: { record: PatientRecord; to
           <TabsPanel value="primeira">
             <SessionNotesList
               sessions={firstVisitSessions}
+              patientId={record.id}
               today={today}
+              aiEnabled={aiEnabled}
               onChanged={refresh}
               emptyText="A primeira consulta ainda não foi marcada. Quando você marcar na agenda, as anotações aparecem aqui."
             />
@@ -194,7 +204,9 @@ export function PatientRecordView({ record, today }: { record: PatientRecord; to
           <TabsPanel value="retornos">
             <SessionNotesList
               sessions={returnSessions}
+              patientId={record.id}
               today={today}
+              aiEnabled={aiEnabled}
               onChanged={refresh}
               emptyText="Nenhuma consulta de retorno ainda."
             />

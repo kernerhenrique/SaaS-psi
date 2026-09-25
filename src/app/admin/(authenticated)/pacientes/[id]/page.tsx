@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { NotFoundError } from "@/server/errors";
 import { requireAdminSession } from "@/server/modules/auth/session";
 import { getBusinessToday } from "@/server/modules/business/business.service";
+import { isAiConfigured } from "@/server/modules/dictation/organize.service";
 import { getPatientRecord, type PatientRecord } from "@/server/modules/patient/patient.service";
 
 import { PatientRecordView } from "./patient-record-view";
@@ -21,5 +22,5 @@ export default async function PatientRecordPage({ params }: PageProps<"/admin/pa
   }
 
   const today = await getBusinessToday(session.businessId);
-  return <PatientRecordView record={record} today={today} />;
+  return <PatientRecordView record={record} today={today} aiEnabled={isAiConfigured()} />;
 }
