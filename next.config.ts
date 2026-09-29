@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   // import/require estático), então o rastreamento automático de arquivos
   // do Next não o inclui sozinho no pacote da função serverless.
   outputFileTracingIncludes: {
-    "/*": ["./src/generated/prisma/**/*", "./node_modules/.prisma/client/**/*"],
+    "/*": ["./src/generated/prisma/**/*", "./node_modules/.prisma/client/**/*", "./.prisma/client/**/*"],
   },
   experimental: {
     // Evita reaproveitar um rastreamento de arquivos em cache de um build
