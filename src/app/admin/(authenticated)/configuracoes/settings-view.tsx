@@ -197,8 +197,109 @@ function SessionTypesForm({ sessionTypes }: { sessionTypes: Settings["sessionTyp
         {sessionTypes.map((type) => (
           <SessionTypeRow key={`${type.id}:${type.priceCents}:${type.durationMin}:${type.name}`} type={type} />
         ))}
+        <NewSessionTypeRow />
       </ul>
     </Card>
+  );
+}
+
+function NewSessionTypeRow() {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState("");
+  const [duration, setDuration] = useState("50");
+  const [isSaving, setIsSaving] = useState(false);
+
+  function reset() {
+    setName("");
+    setPrice("");
+    setDuration("50");
+    setOpen(false);
+  }
+
+  async function save() {
+    if (!name.trim()) {
+      toast.error("Digite um nome para o tipo de consulta.");
+      return;
+    }
+    const priceCents = inputToCents(price);
+    if (priceCents === null) {
+      toast.error("Valor inválido. Use por exemplo 200 ou 180,50.");
+      return;
+    }
+    setIsSaving(true);
+    const result = await apiRequest("/api/admin/session-types", "POST", {
+      name,
+      priceCents,
+      durationMin: Number(duration),
+    });
+    setIsSaving(false);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success("Tipo de consulta criado", { description: name });
+    reset();
+    router.refresh();
+  }
+
+  if (!open) {
+    return (
+      <li>
+        <Button variant="outline" onClick={() => setOpen(true)}>
+          + Adicionar tipo de consulta
+        </Button>
+      </li>
+    );
+  }
+
+  return (
+    <li className="grid gap-3 rounded-xl bg-muted/50 p-3 sm:grid-cols-[1fr_8rem_8rem_auto] sm:items-end">
+      <div className="grid gap-1.5">
+        <Label htmlFor="new-st-name">Nome</Label>
+        <Input
+          id="new-st-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Ex.: Avaliação"
+          className="bg-card"
+          autoFocus
+        />
+      </div>
+      <div className="grid gap-1.5">
+        <Label htmlFor="new-st-price">Valor (R$)</Label>
+        <Input
+          id="new-st-price"
+          inputMode="decimal"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          placeholder="200,00"
+          className="bg-card"
+        />
+      </div>
+      <div className="grid gap-1.5">
+        <Label htmlFor="new-st-duration">Duração (min)</Label>
+        <Input
+          id="new-st-duration"
+          type="number"
+          min={10}
+          max={240}
+          step={5}
+          value={duration}
+          onChange={(e) => setDuration(e.target.value)}
+          className="bg-card"
+        />
+      </div>
+      <div className="flex gap-2">
+        <Button onClick={save} disabled={isSaving}>
+          {isSaving ? "Adicionando..." : "Adicionar"}
+        </Button>
+        <Button variant="ghost" onClick={reset} disabled={isSaving}>
+          Cancelar
+        </Button>
+      </div>
+    </li>
   );
 }
 

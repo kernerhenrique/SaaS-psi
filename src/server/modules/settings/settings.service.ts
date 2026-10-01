@@ -82,3 +82,21 @@ export async function updateSessionType(businessId: string, sessionTypeId: strin
   if (!exists) throw new NotFoundError("Tipo de consulta não encontrado");
   await prisma.sessionType.update({ where: { id: sessionTypeId }, data: input });
 }
+
+/** Cria um novo tipo de consulta (nunca "primeira consulta" — esse já existe e é especial). */
+export async function createSessionType(businessId: string, input: SessionTypeInput) {
+  const duplicate = await prisma.sessionType.count({
+    where: { businessId, active: true, name: { equals: input.name, mode: "insensitive" } },
+  });
+  if (duplicate) throw new ValidationError("Já existe um tipo de consulta com esse nome.");
+
+  const last = await prisma.sessionType.findFirst({
+    where: { businessId },
+    orderBy: { sortOrder: "desc" },
+    select: { sortOrder: true },
+  });
+
+  return prisma.sessionType.create({
+    data: { businessId, ...input, isFirstVisit: false, active: true, sortOrder: (last?.sortOrder ?? -1) + 1 },
+  });
+}
