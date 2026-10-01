@@ -245,6 +245,9 @@ function NewSessionForm({
           onChange={(e) => setAmount(e.target.value)}
           placeholder="200,00"
         />
+        <p className="text-xs text-muted-foreground">
+          Já vem do tipo de consulta escolhido. Altere só se houver desconto ou combinado diferente.
+        </p>
       </div>
 
       {error ? (
