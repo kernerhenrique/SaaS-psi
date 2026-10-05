@@ -3,10 +3,11 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, MessageCircle } from "lucide-react";
+import { Check, MessageCircle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "cn";
 
+import { ConfirmButton } from "@/components/confirm-button";
 import { FadeIn } from "@/components/fade-in";
 import { PageHeader } from "@/components/page-header";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -333,6 +334,16 @@ function SessionTypeRow({ type }: { type: Settings["sessionTypes"][number] }) {
     router.refresh();
   }
 
+  async function remove() {
+    const result = await apiRequest(`/api/admin/session-types/${type.id}`, "DELETE");
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success("Tipo de consulta excluído", { description: name });
+    router.refresh();
+  }
+
   return (
     <li className="grid gap-3 rounded-xl bg-muted/50 p-3 sm:grid-cols-[1fr_8rem_8rem_auto] sm:items-end">
       <div className="grid gap-1.5">
@@ -364,9 +375,12 @@ function SessionTypeRow({ type }: { type: Settings["sessionTypes"][number] }) {
           className="bg-card"
         />
       </div>
-      <Button onClick={save} disabled={!isDirty || isSaving}>
-        {isSaving ? "Salvando..." : "Salvar"}
-      </Button>
+      <div className="flex gap-2">
+        <Button onClick={save} disabled={!isDirty || isSaving}>
+          {isSaving ? "Salvando..." : "Salvar"}
+        </Button>
+        {type.isFirstVisit ? null : <ConfirmButton label="Excluir" icon={<Trash2 />} onConfirm={remove} />}
+      </div>
     </li>
   );
 }

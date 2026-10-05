@@ -83,6 +83,26 @@ export async function updateSessionType(businessId: string, sessionTypeId: strin
   await prisma.sessionType.update({ where: { id: sessionTypeId }, data: input });
 }
 
+/**
+ * "Exclui" um tipo de consulta (na prática, desativa — apagar de verdade
+ * quebraria consultas já marcadas com esse tipo). Some da lista e do
+ * seletor de nova consulta; consultas antigas continuam mostrando o nome
+ * normalmente.
+ */
+export async function deactivateSessionType(businessId: string, sessionTypeId: string) {
+  const type = await prisma.sessionType.findFirst({
+    where: { id: sessionTypeId, businessId },
+    select: { isFirstVisit: true },
+  });
+  if (!type) throw new NotFoundError("Tipo de consulta não encontrado");
+  if (type.isFirstVisit) throw new ValidationError('O tipo "Primeira consulta" não pode ser excluído.');
+
+  const activeCount = await prisma.sessionType.count({ where: { businessId, active: true } });
+  if (activeCount <= 1) throw new ValidationError("Não é possível excluir o último tipo de consulta ativo.");
+
+  await prisma.sessionType.update({ where: { id: sessionTypeId }, data: { active: false } });
+}
+
 /** Cria um novo tipo de consulta (nunca "primeira consulta" — esse já existe e é especial). */
 export async function createSessionType(businessId: string, input: SessionTypeInput) {
   const duplicate = await prisma.sessionType.count({
