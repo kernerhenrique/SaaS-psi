@@ -64,6 +64,14 @@ export function ReportEditor({ data }: { data: ReportPageData }) {
                   : `salvo em ${formatFullDate(data.saved.updatedAt.slice(0, 10))}`
                 : "rascunho montado a partir das anotações — revise antes de salvar"}
             </p>
+            {data.saved ? (
+              <Link
+                href={`/admin/relatorios/paciente/${data.patientId}`}
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                Ver prontuário completo do paciente
+              </Link>
+            ) : null}
           </div>
           <Segmented
             label="Modo"

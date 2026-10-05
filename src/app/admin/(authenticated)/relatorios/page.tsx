@@ -8,20 +8,20 @@ import { PageHeader } from "@/components/page-header";
 import { PatientAvatar } from "@/components/patient-avatar";
 import { formatFullDate } from "@/lib/date";
 import { requireAdminSession } from "@/server/modules/auth/session";
-import { listReports, type ReportListItem } from "@/server/modules/report/report.service";
+import { listReports, type PatientReportSummary, type ReportListItem } from "@/server/modules/report/report.service";
 
 export const metadata: Metadata = { title: "Relatórios" };
 
 export default async function ReportsPage() {
   const session = await requireAdminSession();
-  const { saved, ready } = await listReports(session.businessId);
+  const { patients, ready } = await listReports(session.businessId);
 
   return (
     <div className="space-y-10">
       <FadeIn>
         <PageHeader
           title="Relatórios"
-          description="Relatórios pós-consulta montados a partir das suas anotações. Revise, salve e imprima ou gere o PDF."
+          description="O prontuário de cada paciente acumula um bloco por consulta documentada. Revise, salve e imprima ou gere o PDF."
         />
       </FadeIn>
 
@@ -36,29 +36,29 @@ export default async function ReportsPage() {
             Nenhuma consulta pendente. Ao escrever as anotações de uma consulta, ela aparece aqui.
           </p>
         ) : (
-          <ReportList items={ready} action="Gerar relatório" />
+          <ReadyList items={ready} />
         )}
       </FadeIn>
 
       <FadeIn delay={0.1} className="space-y-3">
         <h2 className="flex items-center gap-2 text-lg font-semibold">
           <FileText className="size-5 text-muted-foreground" />
-          Salvos
+          Prontuários
         </h2>
-        {saved.length === 0 ? (
+        {patients.length === 0 ? (
           <EmptyState
-            title="Nenhum relatório salvo ainda"
-            description="Escolha uma consulta acima para montar o primeiro relatório."
+            title="Nenhum prontuário ainda"
+            description="Escolha uma consulta acima para gerar o primeiro bloco do relatório de um paciente."
           />
         ) : (
-          <ReportList items={saved} action="Abrir" />
+          <PatientList items={patients} />
         )}
       </FadeIn>
     </div>
   );
 }
 
-function ReportList({ items, action }: { items: ReportListItem[]; action: string }) {
+function ReadyList({ items }: { items: ReportListItem[] }) {
   return (
     <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {items.map((item) => (
@@ -73,14 +73,39 @@ function ReportList({ items, action }: { items: ReportListItem[]; action: string
               <p className="text-xs text-muted-foreground">
                 {item.typeName} de {formatFullDate(item.sessionDate)}
               </p>
-              {item.updatedAt ? (
-                <p className="text-xs text-muted-foreground">
-                  Atualizado em {formatFullDate(item.updatedAt.slice(0, 10))}
-                </p>
-              ) : null}
             </div>
             <span className="inline-flex items-center gap-0.5 text-xs font-medium text-primary">
-              {action}
+              Gerar relatório
+              <ChevronRight className="size-3.5 transition group-hover:translate-x-0.5" />
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function PatientList({ items }: { items: PatientReportSummary[] }) {
+  return (
+    <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {items.map((item) => (
+        <li key={item.patientId}>
+          <Link
+            href={`/admin/relatorios/paciente/${item.patientId}`}
+            className="group flex items-center gap-3 rounded-2xl bg-card p-4 shadow-soft ring-1 ring-foreground/5 transition hover:-translate-y-0.5 hover:ring-primary/30 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          >
+            <PatientAvatar name={item.patientName} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{item.patientName}</p>
+              <p className="text-xs text-muted-foreground">
+                {item.sessionCount} {item.sessionCount === 1 ? "consulta documentada" : "consultas documentadas"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Atualizado em {formatFullDate(item.lastUpdatedAt.slice(0, 10))}
+              </p>
+            </div>
+            <span className="inline-flex items-center gap-0.5 text-xs font-medium text-primary">
+              Abrir
               <ChevronRight className="size-3.5 transition group-hover:translate-x-0.5" />
             </span>
           </Link>

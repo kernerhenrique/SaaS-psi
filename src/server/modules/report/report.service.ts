@@ -34,6 +34,13 @@ export type ReportListItem = {
   updatedAt: string | null;
 };
 
+export type PatientReportSummary = {
+  patientId: string;
+  patientName: string;
+  sessionCount: number;
+  lastUpdatedAt: string;
+};
+
 const MAX_REPORT_LENGTH = 50_000;
 
 export async function getReportPageData(businessId: string, sessionId: string): Promise<ReportPageData> {
@@ -114,8 +121,8 @@ export async function saveReport(businessId: string, sessionId: string, content:
   });
 }
 
-/** Relatórios salvos e consultas recentes com anotação que ainda não têm relatório. */
-export async function listReports(businessId: string): Promise<{ saved: ReportListItem[]; ready: ReportListItem[] }> {
+/** Pacientes com relatório salvo (um prontuário acumulado por paciente) e consultas recentes com anotação que ainda não têm relatório. */
+export async function listReports(businessId: string): Promise<{ patients: PatientReportSummary[]; ready: ReportListItem[] }> {
   const business = await prisma.business.findUniqueOrThrow({ where: { id: businessId }, select: { timezone: true } });
   const since = localDayRangeUtc(addDaysToIsoDate(todayInTimeZone(business.timezone), -90), business.timezone).start;
   const select = {
@@ -129,8 +136,7 @@ export async function listReports(businessId: string): Promise<{ saved: ReportLi
     prisma.sessionReport.findMany({
       where: { businessId, deletedAt: null, session: { patient: { deletedAt: null } } },
       orderBy: { updatedAt: "desc" },
-      take: 100,
-      select: { updatedAt: true, session: { select } },
+      select: { updatedAt: true, session: { select: { patientId: true, patient: { select: { fullName: true } } } } },
     }),
     prisma.session.findMany({
       where: {
@@ -145,16 +151,76 @@ export async function listReports(businessId: string): Promise<{ saved: ReportLi
     }),
   ]);
 
-  const toItem = (s: (typeof ready)[number], updatedAt: Date | null): ReportListItem => ({
-    sessionId: s.id,
-    patientName: s.patient.fullName,
-    sessionDate: utcToLocalDate(s.startAt, business.timezone),
-    typeName: s.sessionType.name,
-    updatedAt: updatedAt?.toISOString() ?? null,
-  });
+  const byPatient = new Map<string, PatientReportSummary>();
+  for (const r of reports) {
+    const { patientId, patient } = r.session;
+    const updatedAt = r.updatedAt.toISOString();
+    const existing = byPatient.get(patientId);
+    if (existing) {
+      existing.sessionCount += 1;
+      if (updatedAt > existing.lastUpdatedAt) existing.lastUpdatedAt = updatedAt;
+    } else {
+      byPatient.set(patientId, { patientId, patientName: patient.fullName, sessionCount: 1, lastUpdatedAt: updatedAt });
+    }
+  }
 
   return {
-    saved: reports.map((r) => toItem(r.session, r.updatedAt)),
-    ready: ready.map((s) => toItem(s, null)),
+    patients: [...byPatient.values()].sort((a, b) => (a.lastUpdatedAt < b.lastUpdatedAt ? 1 : -1)),
+    ready: ready.map((s) => ({
+      sessionId: s.id,
+      patientName: s.patient.fullName,
+      sessionDate: utcToLocalDate(s.startAt, business.timezone),
+      typeName: s.sessionType.name,
+      updatedAt: null,
+    })),
+  };
+}
+
+export type PatientReportEntry = {
+  sessionNumber: number;
+  date: string;
+  content: string;
+};
+
+export type PatientReportDocument = {
+  patientId: string;
+  patientName: string;
+  birthDate: string | null;
+  brand: ReportBrand;
+  generatedAt: string;
+  entries: PatientReportEntry[];
+};
+
+/** Prontuário único do paciente: um bloco por consulta documentada, em ordem cronológica. */
+export async function getPatientReportDocument(businessId: string, patientId: string): Promise<PatientReportDocument> {
+  const patient = await prisma.patient.findFirst({
+    where: { id: patientId, businessId, deletedAt: null },
+    select: {
+      fullName: true,
+      birthDate: true,
+      business: { select: { name: true, crp: true, whatsapp: true, address: true, logoUrl: true, timezone: true } },
+      sessions: {
+        where: { report: { is: { deletedAt: null } } },
+        orderBy: { startAt: "asc" },
+        select: { startAt: true, report: { select: { content: true } } },
+      },
+    },
+  });
+  if (!patient || patient.sessions.length === 0) throw new NotFoundError("Prontuário não encontrado");
+
+  const { business } = patient;
+
+  return {
+    patientId,
+    patientName: patient.fullName,
+    birthDate: patient.birthDate?.toISOString().slice(0, 10) ?? null,
+    brand: { name: business.name, crp: business.crp, whatsapp: business.whatsapp, address: business.address, logoUrl: business.logoUrl },
+    generatedAt: todayInTimeZone(business.timezone),
+    entries: patient.sessions.map((s, index) => ({
+      sessionNumber: index + 1,
+      date: utcToLocalDate(s.startAt, business.timezone),
+      // report nunca é null aqui (filtrado no where acima).
+      content: decryptText(s.report!.content),
+    })),
   };
 }
