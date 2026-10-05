@@ -179,10 +179,13 @@ export function AgendaView({
           <span className="size-3 rounded bg-tone-sky" /> Retorno
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="size-3 rounded bg-tone-stone" /> Faltou
+          <span className="size-3 rounded bg-tone-sage" /> Concluída
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="size-1.5 rounded-full bg-tone-honey-foreground" /> Pagamento pendente
+          <span className="size-3 rounded bg-tone-stone" /> Cancelada ou faltou
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="size-2 rounded-full bg-tone-honey-foreground" /> Pagamento pendente
         </span>
       </div>
 

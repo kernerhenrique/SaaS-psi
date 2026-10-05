@@ -32,13 +32,12 @@ async function getTimezone(businessId: string): Promise<string> {
   return business.timezone;
 }
 
-/** Consultas (exceto canceladas) entre `fromISO` (inclusive) e `toISO` (exclusive), no fuso da psicóloga. */
+/** Consultas (incluindo canceladas, mostradas em cinza) entre `fromISO` (inclusive) e `toISO` (exclusive), no fuso da psicóloga. */
 export async function listSessionsForRange(businessId: string, fromISO: string, toISO: string): Promise<AgendaSession[]> {
   const timezone = await getTimezone(businessId);
   const sessions = await prisma.session.findMany({
     where: {
       businessId,
-      status: { not: "CANCELLED" },
       startAt: { gte: localDayRangeUtc(fromISO, timezone).start, lt: localDayRangeUtc(toISO, timezone).start },
     },
     orderBy: { startAt: "asc" },

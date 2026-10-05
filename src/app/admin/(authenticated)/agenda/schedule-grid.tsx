@@ -183,8 +183,11 @@ function SessionBlock({
   onClick: () => void;
 }) {
   const isNoShow = session.status === "NO_SHOW";
+  const isCancelled = session.status === "CANCELLED";
   const isDone = session.status === "DONE";
+  const isStruckThrough = isNoShow || isCancelled;
   const owes = isDone && session.paymentStatus === "PENDING";
+  const isPaid = isDone && session.paymentStatus === "PAID";
 
   return (
     <button
@@ -192,22 +195,31 @@ function SessionBlock({
       onClick={onClick}
       className={cn(
         "absolute inset-x-1 z-[5] flex flex-col overflow-hidden rounded-lg px-2 py-1 text-left text-xs shadow-soft ring-1 transition hover:-translate-y-px hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
-        isNoShow
+        isStruckThrough
           ? "bg-tone-stone text-tone-stone-foreground ring-foreground/5"
-          : session.isFirstVisit
-            ? "bg-tone-peach text-tone-peach-foreground ring-tone-peach-foreground/15"
-            : "bg-tone-sky text-tone-sky-foreground ring-tone-sky-foreground/15",
+          : isDone
+            ? "bg-tone-sage text-tone-sage-foreground ring-tone-sage-foreground/15"
+            : session.isFirstVisit
+              ? "bg-tone-peach text-tone-peach-foreground ring-tone-peach-foreground/15"
+              : "bg-tone-sky text-tone-sky-foreground ring-tone-sky-foreground/15",
       )}
       style={{ top: top + 1, height: height - 2 }}
     >
       <span className="flex items-center gap-1 font-semibold tabular-nums">
         {minutesToTime(session.startMinute)}
-        {isDone ? <Check className="size-3" aria-label="Realizada" /> : null}
-        {owes ? <span className="size-1.5 rounded-full bg-tone-honey-foreground" title="Pagamento pendente" /> : null}
+        {isDone ? (
+          <Check className={cn("size-3", isPaid && "text-tone-sage-foreground")} aria-label="Realizada" />
+        ) : null}
+        {owes ? (
+          <span
+            className="size-2 rounded-full bg-tone-honey-foreground ring-2 ring-tone-honey/60"
+            title="Pagamento pendente"
+          />
+        ) : null}
       </span>
-      <span className={cn("truncate font-medium", isNoShow && "line-through")}>{session.patientName}</span>
+      <span className={cn("truncate font-medium", isStruckThrough && "line-through")}>{session.patientName}</span>
       {height > 56 ? (
-        <span className="truncate opacity-80">{isNoShow ? "Faltou" : session.typeName}</span>
+        <span className="truncate opacity-80">{isNoShow ? "Faltou" : isCancelled ? "Cancelada" : session.typeName}</span>
       ) : null}
     </button>
   );
