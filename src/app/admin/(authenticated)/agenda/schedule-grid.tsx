@@ -205,16 +205,16 @@ function SessionBlock({
       )}
       style={{ top: top + 1, height: height - 2 }}
     >
-      <span className="flex items-center gap-1 font-semibold tabular-nums">
-        {minutesToTime(session.startMinute)}
+      <span className="flex items-center gap-1 overflow-hidden font-semibold tabular-nums">
+        <span className="shrink-0">{minutesToTime(session.startMinute)}</span>
         {isDone ? (
-          <Check className={cn("size-3", isPaid && "text-tone-sage-foreground")} aria-label="Realizada" />
+          <Check className={cn("size-3 shrink-0", isPaid && "text-tone-sage-foreground")} aria-label="Realizada" />
         ) : null}
         {owes ? (
-          <span
-            className="size-2 rounded-full bg-tone-honey-foreground ring-2 ring-tone-honey/60"
-            title="Pagamento pendente"
-          />
+          <span className="flex min-w-0 items-center gap-1 text-[10px] font-normal opacity-80" title="Pagamento pendente">
+            <span className="size-2 shrink-0 rounded-full bg-tone-honey-foreground ring-2 ring-tone-honey/60" />
+            <span className="truncate">Pagamento pendente</span>
+          </span>
         ) : null}
       </span>
       <span className={cn("truncate font-medium", isStruckThrough && "line-through")}>{session.patientName}</span>
