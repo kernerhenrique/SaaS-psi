@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { AccentColorScope } from "@/components/accent-color-scope";
+import { SessionKeepAlive } from "@/components/session-keep-alive";
 import { prisma } from "@/server/db/prisma";
 import { getAdminSession } from "@/server/modules/auth/session";
 
@@ -25,6 +26,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <AccentColorScope accentColor={business.accentColor} className="flex flex-1 flex-col">
+      <SessionKeepAlive />
       <AppShell brand={{ name: business.name, subtitle, logoUrl: business.logoUrl }}>
         {children}
       </AppShell>
