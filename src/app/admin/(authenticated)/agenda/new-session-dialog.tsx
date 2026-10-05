@@ -8,6 +8,7 @@ import { cn } from "cn";
 
 import { PatientAvatar } from "@/components/patient-avatar";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +30,12 @@ export type NewSessionDraft = { date: string; time: string; patientId?: string }
 
 function normalize(text: string): string {
   return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
+
+/** Nome do dia da semana ("sexta-feira") a partir de uma data YYYY-MM-DD, sem depender do fuso do consultório. */
+function weekdayLabel(dateISO: string): string {
+  const [year, month, day] = dateISO.split("-").map(Number);
+  return new Intl.DateTimeFormat("pt-BR", { weekday: "long" }).format(new Date(Date.UTC(year, month - 1, day, 12)));
 }
 
 export function NewSessionDialog({
@@ -71,6 +78,8 @@ function NewSessionForm({
   const [time, setTime] = useState(draft.time);
   const [duration, setDuration] = useState<string | null>(null);
   const [amount, setAmount] = useState<string | null>(null);
+  const [repeat, setRepeat] = useState(false);
+  const [repeatWeeks, setRepeatWeeks] = useState("4");
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -94,20 +103,28 @@ function NewSessionForm({
     if (!selectedType) return setError("Escolha o tipo de consulta.");
     const amountCents = inputToCents(amountValue);
     if (amountCents === null) return setError("Valor inválido. Use por exemplo 200 ou 180,50.");
+    const weeks = Number(repeatWeeks);
+    if (repeat && (!Number.isInteger(weeks) || weeks < 2 || weeks > 24)) {
+      return setError("Repetir semanalmente aceita de 2 a 24 semanas.");
+    }
 
     setIsSaving(true);
-    const result = await apiRequest("/api/admin/sessions", "POST", {
+    const result = await apiRequest<{ session?: { id: string }; sessions?: string[] }>("/api/admin/sessions", "POST", {
       patientId,
       sessionTypeId: selectedType.id,
       date,
       startTime: time,
       durationMin: Number(durationValue),
       amountCents,
+      repeatWeeks: repeat ? weeks : undefined,
     });
     setIsSaving(false);
     if (!result.ok) return setError(result.error);
 
-    toast.success("Consulta marcada", { description: `${patient?.fullName ?? "Paciente"} · ${date.split("-").reverse().join("/")} às ${time}` });
+    const count = result.data.sessions?.length ?? 1;
+    toast.success(count > 1 ? `${count} consultas marcadas` : "Consulta marcada", {
+      description: `${patient?.fullName ?? "Paciente"} · ${date.split("-").reverse().join("/")} às ${time}`,
+    });
     onClose();
     // Leva para a semana da consulta (caso a data tenha sido trocada) e recarrega os dados.
     router.push(`/admin/agenda?data=${date}`);
@@ -248,6 +265,27 @@ function NewSessionForm({
         <p className="text-xs text-muted-foreground">
           Já vem do tipo de consulta escolhido. Altere só se houver desconto ou combinado diferente.
         </p>
+      </div>
+
+      <div className="grid gap-2">
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <Checkbox checked={repeat} onCheckedChange={setRepeat} />
+          Repetir semanalmente ({weekdayLabel(date)}, mesmo horário)
+        </label>
+        {repeat ? (
+          <div className="grid max-w-40 gap-1.5">
+            <Label htmlFor="session-repeat-weeks">Por quantas semanas</Label>
+            <Input
+              id="session-repeat-weeks"
+              type="number"
+              min={2}
+              max={24}
+              value={repeatWeeks}
+              onChange={(e) => setRepeatWeeks(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">Cada consulta fica independente: pode cancelar ou remarcar uma sem afetar as outras.</p>
+          </div>
+        ) : null}
       </div>
 
       {error ? (

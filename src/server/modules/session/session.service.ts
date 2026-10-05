@@ -143,6 +143,51 @@ export async function createSession(businessId: string, input: CreateSessionInpu
   );
 }
 
+/** Cria N consultas semanais (mesmo paciente/tipo/duração/valor), cada uma independente das outras. */
+export async function createRecurringSessions(
+  businessId: string,
+  input: CreateSessionInput,
+  occurrences: number,
+): Promise<{ ids: string[] }> {
+  const [timezone, patient, sessionType] = await Promise.all([
+    getTimezone(businessId),
+    prisma.patient.findFirst({ where: { id: input.patientId, businessId, deletedAt: null }, select: { id: true } }),
+    prisma.sessionType.findFirst({ where: { id: input.sessionTypeId, businessId }, select: { id: true } }),
+  ]);
+  if (!patient) throw new ValidationError("Paciente não encontrado.");
+  if (!sessionType) throw new ValidationError("Tipo de consulta não encontrado.");
+
+  const instants = Array.from({ length: occurrences }, (_, i) =>
+    toInstants({ ...input, date: addDaysToIsoDate(input.date, 7 * i) }, timezone),
+  );
+
+  // As ocorrências entre si nunca colidem (ficam a 7+ dias de distância);
+  // só precisamos checar cada uma contra o que já existe no banco.
+  for (const { startAt, endAt } of instants) {
+    await assertNoOverlap(businessId, startAt, endAt);
+  }
+
+  const ids = await withOverlapGuard(() =>
+    prisma.$transaction(
+      instants.map(({ startAt, endAt }) =>
+        prisma.session.create({
+          data: {
+            businessId,
+            patientId: input.patientId,
+            sessionTypeId: input.sessionTypeId,
+            startAt,
+            endAt,
+            amountCents: input.amountCents,
+          },
+          select: { id: true },
+        }),
+      ),
+    ),
+  );
+
+  return { ids: ids.map((s) => s.id) };
+}
+
 export async function rescheduleSession(businessId: string, sessionId: string, schedule: SessionScheduleInput) {
   const [timezone, session] = await Promise.all([getTimezone(businessId), findSession(businessId, sessionId)]);
   if (session.status === "CANCELLED") throw new ValidationError("Reabra a consulta antes de remarcar.");

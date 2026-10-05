@@ -13,6 +13,8 @@ export type CreateSessionInput = SessionScheduleInput & {
   patientId: string;
   sessionTypeId: string;
   amountCents: number;
+  /** Quantas ocorrências semanais criar, incluindo a primeira. Ausente ou 1 = sem repetição. */
+  repeatWeeks?: number;
 };
 
 export type PaymentInput = {
@@ -63,6 +65,17 @@ export function parseScheduleInput(body: unknown): SessionScheduleInput {
   return { date, startMinute, durationMin };
 }
 
+// Limite de bom senso para "repetir semanalmente" (~6 meses), contra erro de digitação.
+const MAX_REPEAT_WEEKS = 24;
+
+function parseRepeatWeeks(value: unknown): number | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 2 || value > MAX_REPEAT_WEEKS) {
+    throw new ValidationError(`Repetir semanalmente aceita de 2 a ${MAX_REPEAT_WEEKS} semanas.`);
+  }
+  return value;
+}
+
 export function parseCreateSessionInput(body: unknown): CreateSessionInput {
   const b = asObject(body);
   return {
@@ -70,6 +83,7 @@ export function parseCreateSessionInput(body: unknown): CreateSessionInput {
     patientId: parseId(b.patientId, "Escolha o paciente."),
     sessionTypeId: parseId(b.sessionTypeId, "Escolha o tipo de consulta."),
     amountCents: parseAmountCents(b.amountCents),
+    repeatWeeks: parseRepeatWeeks(b.repeatWeeks),
   };
 }
 
