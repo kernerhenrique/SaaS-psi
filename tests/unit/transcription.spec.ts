@@ -22,11 +22,8 @@ describe("appendTranscript", () => {
 });
 
 describe("parseTranscripts", () => {
-  it("exige ao menos um dos dois blocos", () => {
-    expect(() => parseTranscripts({ parentTranscript: " ", patientTranscript: "" })).toThrow(/pelo menos um/);
-    expect(parseTranscripts({ parentTranscript: " Oi ", patientTranscript: null })).toEqual({
-      parentTranscript: "Oi",
-      patientTranscript: "",
-    });
+  it("exige uma transcrição não vazia", () => {
+    expect(() => parseTranscripts({ transcript: " " })).toThrow(/Dite ou escreva/);
+    expect(parseTranscripts({ transcript: " Oi " })).toEqual({ transcript: "Oi" });
   });
 });

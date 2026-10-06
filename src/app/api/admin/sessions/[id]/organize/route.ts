@@ -12,7 +12,7 @@ interface RouteParams {
 // Cada chamada custa dinheiro: limita a 20 organizações a cada 10 minutos por conta.
 const ORGANIZE_RATE_LIMIT = { limit: 20, windowMs: 10 * 60 * 1000 };
 
-/** Organiza o texto ditado nos campos do prontuário (rascunho — nada é salvo aqui). */
+/** Organiza o texto ditado na anotação do prontuário (rascunho — nada é salvo aqui). */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const session = await requireAdminSession();

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { prisma } from "@/server/db/prisma";
 import { NotFoundError, ValidationError } from "@/server/errors";
 
-// Organiza o ditado da psicóloga (feito DEPOIS do atendimento) nos campos do
+// Organiza o ditado da psicóloga (feito DEPOIS do atendimento) na anotação do
 // prontuário usando o Claude. O resultado é só um rascunho: a psicóloga revisa
 // e edita antes de salvar. Nenhum áudio chega aqui — só o texto transcrito.
 
@@ -13,8 +13,7 @@ const MODEL = "claude-opus-5";
 const MAX_TRANSCRIPT_LENGTH = 20_000;
 
 export const OrganizedNoteSchema = z.object({
-  parentReport: z.string().describe("Resumo do que os pais/responsáveis relataram. Vazio se nada foi ditado."),
-  patientSession: z.string().describe("Resumo da sessão com o paciente. Vazio se nada foi ditado."),
+  content: z.string().describe("Anotação da consulta, organizada em texto corrido."),
   followUps: z
     .array(z.string())
     .describe("Pontos curtos para verificar na próxima sessão, só os que foram mencionados."),
@@ -22,14 +21,13 @@ export const OrganizedNoteSchema = z.object({
 
 export type OrganizedNote = z.infer<typeof OrganizedNoteSchema>;
 
-const SYSTEM_PROMPT = `Você ajuda uma psicóloga que atende crianças, adolescentes e jovens a organizar as anotações do prontuário.
-Logo após o atendimento, ela dita dois resumos: o que os pais ou responsáveis relataram e como foi a sessão com o paciente.
+const SYSTEM_PROMPT = `Você ajuda uma psicóloga que atende crianças, adolescentes e jovens a organizar a anotação do prontuário.
+Logo após o atendimento, ela dita um resumo livre da consulta — pode incluir o que os pais ou responsáveis relataram e como foi a sessão com o paciente, sem ordem fixa.
 O texto vem de reconhecimento de voz e pode ter erros de transcrição, repetições e marcas de fala.
 
-Reescreva cada resumo em português do Brasil, em texto corrido, claro e objetivo, na terceira pessoa, no tom de um registro clínico.
+Reescreva o resumo em português do Brasil, em texto corrido, claro e objetivo, na terceira pessoa, no tom de um registro clínico.
 - Mantenha somente o que foi ditado. Não invente fatos, não acrescente interpretações, hipóteses ou diagnósticos.
 - Corrija erros evidentes de transcrição e remova hesitações e repetições, sem mudar o sentido.
-- Se um dos blocos veio vazio, devolva esse campo como texto vazio.
 - Em "followUps", liste apenas os pontos que a psicóloga indicou para acompanhar ou verificar depois
   (ex.: "Verificar se melhorou o sono"), em frases curtas começando com verbo. Se não houver, devolva lista vazia.`;
 
@@ -45,14 +43,13 @@ function cleanTranscript(value: unknown, label: string): string {
   return text;
 }
 
-export function parseTranscripts(body: unknown): { parentTranscript: string; patientTranscript: string } {
+export function parseTranscripts(body: unknown): { transcript: string } {
   const b = (typeof body === "object" && body !== null ? body : {}) as Record<string, unknown>;
-  const parentTranscript = cleanTranscript(b.parentTranscript, "O relato dos pais");
-  const patientTranscript = cleanTranscript(b.patientTranscript, "O relato da sessão");
-  if (!parentTranscript && !patientTranscript) {
-    throw new ValidationError("Dite ou escreva pelo menos um dos dois resumos antes de organizar.");
+  const transcript = cleanTranscript(b.transcript, "A anotação ditada");
+  if (!transcript) {
+    throw new ValidationError("Dite ou escreva a anotação antes de organizar.");
   }
-  return { parentTranscript, patientTranscript };
+  return { transcript };
 }
 
 export class AiUnavailableError extends Error {}
@@ -60,7 +57,7 @@ export class AiUnavailableError extends Error {}
 export async function organizeDictation(
   businessId: string,
   sessionId: string,
-  transcripts: { parentTranscript: string; patientTranscript: string },
+  transcripts: { transcript: string },
 ): Promise<OrganizedNote> {
   const session = await prisma.session.findFirst({ where: { id: sessionId, businessId }, select: { id: true } });
   if (!session) throw new NotFoundError("Consulta não encontrada");
@@ -78,12 +75,7 @@ export async function organizeDictation(
       fallbacks: "default",
       output_config: { effort: "medium", format: betaZodOutputFormat(OrganizedNoteSchema) },
       system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: `<relato_dos_pais>\n${transcripts.parentTranscript}\n</relato_dos_pais>\n\n<sessao_com_paciente>\n${transcripts.patientTranscript}\n</sessao_com_paciente>`,
-        },
-      ],
+      messages: [{ role: "user", content: transcripts.transcript }],
     });
 
     if (response.stop_reason === "refusal") {
@@ -93,8 +85,7 @@ export async function organizeDictation(
       throw new ValidationError("A resposta da IA veio incompleta. Tente de novo.");
     }
     return {
-      parentReport: response.parsed_output.parentReport.trim(),
-      patientSession: response.parsed_output.patientSession.trim(),
+      content: response.parsed_output.content.trim(),
       followUps: response.parsed_output.followUps.map((item) => item.trim()).filter(Boolean).slice(0, 10),
     };
   } catch (error) {
