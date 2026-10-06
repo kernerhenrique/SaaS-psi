@@ -43,3 +43,5 @@ docs/*.docx
 
 # sessão salva pelos testes E2E
 /playwright/.auth/
+.vercel
+.env*
