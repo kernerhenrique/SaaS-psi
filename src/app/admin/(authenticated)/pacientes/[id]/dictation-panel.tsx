@@ -14,11 +14,10 @@ import { apiRequest } from "@/lib/api-client";
 import { appendTranscript, transcriptionProvider } from "@/lib/transcription";
 import type { TranscriptionHandle } from "@/lib/transcription/types";
 
-type BlockKey = "parent" | "patient";
-type Draft = { parentReport: string; patientSession: string; followUps: { text: string; selected: boolean }[] };
+type Draft = { content: string; followUps: { text: string; selected: boolean }[] };
 
 /**
- * Ditado após o atendimento: 1) a psicóloga dita os dois resumos;
+ * Ditado após o atendimento: 1) a psicóloga dita a anotação da consulta;
  * 2) a IA organiza (ou ela segue sem IA); 3) revisa e salva no prontuário.
  * Nenhum áudio é gravado — só o texto chega ao sistema.
  */
@@ -37,8 +36,8 @@ export function DictationPanel({
   onCancel: () => void;
   onSaved: () => void;
 }) {
-  const [transcripts, setTranscripts] = useState<Record<BlockKey, string>>({ parent: "", patient: "" });
-  const [listeningBlock, setListeningBlock] = useState<BlockKey | null>(null);
+  const [transcript, setTranscript] = useState("");
+  const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState("");
   const [micAvailable, setMicAvailable] = useState(false);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -53,20 +52,20 @@ export function DictationPanel({
     return () => handleRef.current?.stop();
   }, []);
 
-  function toggleMic(block: BlockKey) {
-    if (listeningBlock) {
+  function toggleMic() {
+    if (listening) {
       handleRef.current?.stop();
-      if (listeningBlock === block) return;
+      return;
     }
     setError(null);
-    setListeningBlock(block);
+    setListening(true);
     handleRef.current = transcriptionProvider.start({
-      onFinal: (text) => setTranscripts((prev) => ({ ...prev, [block]: appendTranscript(prev[block], text) })),
+      onFinal: (text) => setTranscript((prev) => appendTranscript(prev, text)),
       onInterim: setInterim,
       onError: setError,
       onEnd: () => {
         setInterim("");
-        setListeningBlock((current) => (current === block ? null : current));
+        setListening(false);
       },
     });
   }
@@ -79,38 +78,31 @@ export function DictationPanel({
     stopListening();
     setIsWorking(true);
     setError(null);
-    const result = await apiRequest<{ draft: { parentReport: string; patientSession: string; followUps: string[] } }>(
+    const result = await apiRequest<{ draft: { content: string; followUps: string[] } }>(
       `/api/admin/sessions/${sessionId}/organize`,
       "POST",
-      { parentTranscript: transcripts.parent, patientTranscript: transcripts.patient },
+      { transcript },
     );
     setIsWorking(false);
     if (!result.ok) return setError(result.error);
     const d = result.data.draft;
-    setDraft({
-      parentReport: d.parentReport,
-      patientSession: d.patientSession,
-      followUps: d.followUps.map((text) => ({ text, selected: true })),
-    });
+    setDraft({ content: d.content, followUps: d.followUps.map((text) => ({ text, selected: true })) });
   }
 
   function useWithoutAi() {
     stopListening();
-    if (!transcripts.parent.trim() && !transcripts.patient.trim()) {
-      return setError("Dite ou escreva pelo menos um dos dois resumos.");
+    if (!transcript.trim()) {
+      return setError("Dite ou escreva a anotação antes de continuar.");
     }
     setError(null);
-    setDraft({ parentReport: transcripts.parent.trim(), patientSession: transcripts.patient.trim(), followUps: [] });
+    setDraft({ content: transcript.trim(), followUps: [] });
   }
 
   async function saveDraft() {
     if (!draft) return;
     setIsWorking(true);
     setError(null);
-    const note = await apiRequest(`/api/admin/sessions/${sessionId}/note`, "PUT", {
-      parentReport: draft.parentReport,
-      patientSession: draft.patientSession,
-    });
+    const note = await apiRequest(`/api/admin/sessions/${sessionId}/note`, "PUT", { content: draft.content });
     if (!note.ok) {
       setIsWorking(false);
       return setError(note.error);
@@ -121,13 +113,13 @@ export function DictationPanel({
       if (!res.ok) toast.error(`Não foi possível salvar “${item.text}”: ${res.error}`);
     }
     setIsWorking(false);
-    toast.success("Anotações salvas no prontuário", {
+    toast.success("Anotação salva no prontuário", {
       description: selected.length ? `${selected.length} ponto(s) adicionados para acompanhar.` : undefined,
     });
     onSaved();
   }
 
-  const hasText = Boolean(transcripts.parent.trim() || transcripts.patient.trim());
+  const hasText = Boolean(transcript.trim());
 
   // ---- Etapa 2: revisão do rascunho --------------------------------------
   if (draft) {
@@ -137,25 +129,15 @@ export function DictationPanel({
           Rascunho pronto. <strong>Revise e corrija o que precisar</strong> — nada foi salvo ainda.
           {hasExistingNote ? " Ao salvar, este texto substitui a anotação atual desta consulta." : ""}
         </p>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="grid gap-1.5">
-            <Label htmlFor={`dr-parent-${sessionId}`}>O que os pais ou responsáveis relataram</Label>
-            <Textarea
-              id={`dr-parent-${sessionId}`}
-              value={draft.parentReport}
-              onChange={(e) => setDraft({ ...draft, parentReport: e.target.value })}
-              className="min-h-40"
-            />
-          </div>
-          <div className="grid gap-1.5">
-            <Label htmlFor={`dr-patient-${sessionId}`}>Como foi a sessão com o paciente</Label>
-            <Textarea
-              id={`dr-patient-${sessionId}`}
-              value={draft.patientSession}
-              onChange={(e) => setDraft({ ...draft, patientSession: e.target.value })}
-              className="min-h-40"
-            />
-          </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor={`dr-content-${sessionId}`}>Anotação da consulta</Label>
+          <Textarea
+            id={`dr-content-${sessionId}`}
+            value={draft.content}
+            onChange={(e) => setDraft({ ...draft, content: e.target.value })}
+            rows={10}
+            className="min-h-56"
+          />
         </div>
 
         {draft.followUps.length ? (
@@ -216,35 +198,22 @@ export function DictationPanel({
       <p className="flex gap-2 rounded-xl bg-muted/60 p-3 text-xs text-muted-foreground">
         <Info className="mt-0.5 size-4 shrink-0" />
         <span>
-          Dite depois do atendimento — a sessão em si não é gravada. {micAvailable ? transcriptionProvider.privacyNote : "Este navegador não tem reconhecimento de voz: digite os resumos (no Chrome, o microfone fica disponível)."}
+          Dite depois do atendimento — a sessão em si não é gravada. {micAvailable ? transcriptionProvider.privacyNote : "Este navegador não tem reconhecimento de voz: digite a anotação (no Chrome, o microfone fica disponível)."}
           {aiEnabled ? " Ao organizar com IA, o texto é enviado à Anthropic (Claude) para ser reescrito." : ""}
         </span>
       </p>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <DictationBlock
-          id={`dict-parent-${sessionId}`}
-          label="1. O que os pais ou responsáveis relataram"
-          hint="Resumo da conversa com a família."
-          value={transcripts.parent}
-          onChange={(value) => setTranscripts((prev) => ({ ...prev, parent: value }))}
-          listening={listeningBlock === "parent"}
-          interim={listeningBlock === "parent" ? interim : ""}
-          micAvailable={micAvailable}
-          onToggleMic={() => toggleMic("parent")}
-        />
-        <DictationBlock
-          id={`dict-patient-${sessionId}`}
-          label="2. Como foi a sessão com o paciente"
-          hint="Atividades, falas importantes, comportamento, pontos a acompanhar."
-          value={transcripts.patient}
-          onChange={(value) => setTranscripts((prev) => ({ ...prev, patient: value }))}
-          listening={listeningBlock === "patient"}
-          interim={listeningBlock === "patient" ? interim : ""}
-          micAvailable={micAvailable}
-          onToggleMic={() => toggleMic("patient")}
-        />
-      </div>
+      <DictationBlock
+        id={`dict-${sessionId}`}
+        label="Anotação da consulta"
+        hint="O que os pais relataram, como foi a sessão, atividades, falas importantes, comportamento..."
+        value={transcript}
+        onChange={setTranscript}
+        listening={listening}
+        interim={interim}
+        micAvailable={micAvailable}
+        onToggleMic={toggleMic}
+      />
 
       {error ? <ErrorMessage text={error} /> : null}
 

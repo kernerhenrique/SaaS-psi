@@ -118,10 +118,7 @@ function SessionNoteCard({
       ) : mode === "edit" ? (
         <NoteEditor session={session} onDone={() => setMode("view")} onChanged={onChanged} />
       ) : session.note ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          <NoteBlock title="O que os pais relataram" text={session.note.parentReport} />
-          <NoteBlock title="Sessão com o paciente" text={session.note.patientSession} />
-        </div>
+        <NoteBlock text={session.note.content} />
       ) : (
         <div className="flex flex-col items-start gap-3 rounded-xl bg-muted/60 p-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">Nenhuma anotação desta consulta ainda.</p>
@@ -141,10 +138,9 @@ function SessionNoteCard({
   );
 }
 
-function NoteBlock({ title, text }: { title: string; text: string | null }) {
+function NoteBlock({ text }: { text: string | null }) {
   return (
     <section className="rounded-xl bg-muted/60 p-4">
-      <h3 className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">{title}</h3>
       <p className="text-sm whitespace-pre-line">{text ?? <span className="text-muted-foreground">Sem anotação.</span>}</p>
     </section>
   );
@@ -159,47 +155,33 @@ function NoteEditor({
   onDone: () => void;
   onChanged: () => void;
 }) {
-  const [parentReport, setParentReport] = useState(session.note?.parentReport ?? "");
-  const [patientSession, setPatientSession] = useState(session.note?.patientSession ?? "");
+  const [content, setContent] = useState(session.note?.content ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSaving(true);
-    const result = await apiRequest(`/api/admin/sessions/${session.id}/note`, "PUT", { parentReport, patientSession });
+    const result = await apiRequest(`/api/admin/sessions/${session.id}/note`, "PUT", { content });
     setIsSaving(false);
     if (!result.ok) return setError(result.error);
-    toast.success("Anotações salvas");
+    toast.success("Anotação salva");
     onDone();
     onChanged();
   }
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-4">
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="grid gap-1.5">
-          <Label htmlFor={`pr-${session.id}`}>O que os pais ou responsáveis relataram</Label>
-          <Textarea
-            id={`pr-${session.id}`}
-            value={parentReport}
-            onChange={(e) => setParentReport(e.target.value)}
-            rows={7}
-            className="min-h-40"
-            placeholder="Como foi a semana, mudanças percebidas em casa ou na escola..."
-          />
-        </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor={`ps-${session.id}`}>Como foi a sessão com o paciente</Label>
-          <Textarea
-            id={`ps-${session.id}`}
-            value={patientSession}
-            onChange={(e) => setPatientSession(e.target.value)}
-            rows={7}
-            className="min-h-40"
-            placeholder="Atividades, brincadeiras, falas importantes, comportamento..."
-          />
-        </div>
+      <div className="grid gap-1.5">
+        <Label htmlFor={`note-${session.id}`}>Anotação da consulta</Label>
+        <Textarea
+          id={`note-${session.id}`}
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          rows={10}
+          className="min-h-56"
+          placeholder="Como foi a semana, mudanças percebidas em casa ou na escola, atividades da sessão, comportamento, falas importantes..."
+        />
       </div>
       {error ? (
         <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -211,7 +193,7 @@ function NoteEditor({
           Cancelar
         </Button>
         <Button type="submit" disabled={isSaving}>
-          {isSaving ? "Salvando..." : "Salvar anotações"}
+          {isSaving ? "Salvando..." : "Salvar anotação"}
         </Button>
       </div>
     </form>
