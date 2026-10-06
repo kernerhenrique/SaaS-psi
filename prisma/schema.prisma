@@ -210,7 +210,7 @@ model ParentIntakeNote {
   @@index([patientId, date])
 }
 
-/// Anotações de uma consulta: relato dos pais + sessão com o paciente.
+/// Anotação de uma consulta (texto único, escrito pela psicóloga).
 /// Primeira consulta ou retorno é definido pelo tipo da sessão.
 model SessionNote {
   id             String     @id @default(cuid())
@@ -218,10 +218,8 @@ model SessionNote {
   business       Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
   sessionId      String     @unique
   session        Session    @relation(fields: [sessionId], references: [id], onDelete: Restrict)
-  /// Resumo do que os pais/responsáveis relataram (criptografado).
-  parentReport   String?
-  /// Resumo da sessão com o paciente (criptografado).
-  patientSession String?
+  /// Anotação única da consulta (criptografado).
+  content        String?
   /// Rascunho (ex.: gerado pelo ditado + IA) até a psicóloga revisar e salvar.
   status         NoteStatus @default(DRAFT)
   createdAt      DateTime   @default(now())

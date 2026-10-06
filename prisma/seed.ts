@@ -40,6 +40,8 @@ type SeedSession = {
   method?: PaymentMethod;
   paidDay?: number;
   amountCents?: number;
+  // Campos separados só para facilitar a leitura dos dados de exemplo abaixo;
+  // são combinados num texto único (content) na hora de salvar.
   note?: { parentReport?: string; patientSession: string };
 };
 
@@ -263,12 +265,12 @@ async function main() {
       if (s.status === "DONE") lastDoneSessionId = session.id;
 
       if (s.note) {
+        const content = [s.note.parentReport, s.note.patientSession].filter(Boolean).join("\n\n");
         await prisma.sessionNote.create({
           data: {
             businessId: business.id,
             sessionId: session.id,
-            parentReport: s.note.parentReport ? encryptText(s.note.parentReport) : null,
-            patientSession: encryptText(s.note.patientSession),
+            content: encryptText(content),
             status: "FINAL",
           },
         });
