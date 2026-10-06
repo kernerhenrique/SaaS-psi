@@ -51,8 +51,7 @@ export async function saveSessionNote(businessId: string, sessionId: string, inp
   if (!session) throw new NotFoundError("Consulta não encontrada");
 
   const data = {
-    parentReport: encryptOptional(input.parentReport),
-    patientSession: encryptOptional(input.patientSession),
+    content: encryptOptional(input.content),
     status: "FINAL" as const,
     deletedAt: null,
   };

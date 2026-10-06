@@ -36,7 +36,7 @@ export type PatientSessionDto = {
   paymentStatus: PaymentStatus;
   paymentMethod: PaymentMethod | null;
   paidAt: string | null;
-  note: { parentReport: string | null; patientSession: string | null; status: NoteStatus; updatedAt: string } | null;
+  note: { content: string | null; status: NoteStatus; updatedAt: string } | null;
 };
 
 export type PatientRecord = {
@@ -173,8 +173,7 @@ export async function getPatientRecord(businessId: string, patientId: string): P
       note:
         s.note && !s.note.deletedAt
           ? {
-              parentReport: decryptOptional(s.note.parentReport),
-              patientSession: decryptOptional(s.note.patientSession),
+              content: decryptOptional(s.note.content),
               status: s.note.status,
               updatedAt: s.note.updatedAt.toISOString(),
             }

@@ -2,8 +2,12 @@ import { ValidationError } from "@/server/errors";
 import { MAX_LONG_TEXT, optionalText, parseIsoDate, requiredText } from "@/server/modules/patient/patient.parse";
 
 export type ParentNoteInput = { date: string; content: string };
-export type SessionNoteInput = { parentReport: string | null; patientSession: string | null };
+export type SessionNoteInput = { content: string | null };
 export type FollowUpInput = { text: string };
+
+// Campo único no lugar dos dois antigos (relato dos pais + sessão), então
+// aceita o dobro do texto livre padrão.
+const MAX_NOTE_LENGTH = MAX_LONG_TEXT * 2;
 
 function asObject(value: unknown): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -21,14 +25,9 @@ export function parseParentNoteInput(body: unknown, todayISO: string): ParentNot
 
 export function parseSessionNoteInput(body: unknown): SessionNoteInput {
   const b = asObject(body);
-  const input = {
-    parentReport: optionalText(b.parentReport, "o relato dos pais"),
-    patientSession: optionalText(b.patientSession, "a anotação da sessão"),
-  };
-  if (!input.parentReport && !input.patientSession) {
-    throw new ValidationError("Escreva ao menos uma das anotações antes de salvar.");
-  }
-  return input;
+  const content = optionalText(b.content, "a anotação da consulta", MAX_NOTE_LENGTH);
+  if (!content) throw new ValidationError("Escreva a anotação antes de salvar.");
+  return { content };
 }
 
 export function parseFollowUpInput(body: unknown): FollowUpInput {
