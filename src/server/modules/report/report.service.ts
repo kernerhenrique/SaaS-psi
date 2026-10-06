@@ -57,7 +57,6 @@ export async function getReportPageData(businessId: string, sessionId: string): 
           fullName: true,
           birthDate: true,
           guardians: { select: { name: true, relationship: true }, orderBy: { isPrimary: "desc" }, take: 1 },
-          followUps: { where: { doneAt: null, deletedAt: null }, orderBy: { createdAt: "asc" }, select: { text: true } },
         },
       },
     },
@@ -77,9 +76,7 @@ export async function getReportPageData(businessId: string, sessionId: string): 
     sessionDate,
     sessionTypeName: session.sessionType.name,
     guardian: patient.guardians[0] ?? null,
-    parentReport: decryptOptional(note?.parentReport),
-    patientSession: decryptOptional(note?.patientSession),
-    followUps: patient.followUps.map((f) => decryptText(f.text)),
+    noteContent: decryptOptional(note?.content),
   };
 
   const report = session.report && !session.report.deletedAt ? session.report : null;
@@ -121,7 +118,10 @@ export async function saveReport(businessId: string, sessionId: string, content:
   });
 }
 
-/** Pacientes com relatório salvo (um prontuário acumulado por paciente) e consultas recentes com anotação que ainda não têm relatório. */
+/**
+ * Pacientes com prontuário (toda consulta com anotação já entra automaticamente)
+ * e consultas recentes com anotação que ainda não têm relatório avulso gerado.
+ */
 export async function listReports(businessId: string): Promise<{ patients: PatientReportSummary[]; ready: ReportListItem[] }> {
   const business = await prisma.business.findUniqueOrThrow({ where: { id: businessId }, select: { timezone: true } });
   const since = localDayRangeUtc(addDaysToIsoDate(todayInTimeZone(business.timezone), -90), business.timezone).start;
@@ -132,9 +132,9 @@ export async function listReports(businessId: string): Promise<{ patients: Patie
     patient: { select: { fullName: true } },
   } as const;
 
-  const [reports, ready] = await Promise.all([
-    prisma.sessionReport.findMany({
-      where: { businessId, deletedAt: null, session: { patient: { deletedAt: null } } },
+  const [notes, ready] = await Promise.all([
+    prisma.sessionNote.findMany({
+      where: { businessId, deletedAt: null, content: { not: null }, session: { patient: { deletedAt: null } } },
       orderBy: { updatedAt: "desc" },
       select: { updatedAt: true, session: { select: { patientId: true, patient: { select: { fullName: true } } } } },
     }),
@@ -152,9 +152,9 @@ export async function listReports(businessId: string): Promise<{ patients: Patie
   ]);
 
   const byPatient = new Map<string, PatientReportSummary>();
-  for (const r of reports) {
-    const { patientId, patient } = r.session;
-    const updatedAt = r.updatedAt.toISOString();
+  for (const n of notes) {
+    const { patientId, patient } = n.session;
+    const updatedAt = n.updatedAt.toISOString();
     const existing = byPatient.get(patientId);
     if (existing) {
       existing.sessionCount += 1;
@@ -191,7 +191,11 @@ export type PatientReportDocument = {
   entries: PatientReportEntry[];
 };
 
-/** Prontuário único do paciente: um bloco por consulta documentada, em ordem cronológica. */
+/**
+ * Prontuário único do paciente: um bloco por consulta com anotação, em ordem
+ * cronológica — alimentado direto pela anotação da consulta, sem precisar de
+ * nenhum passo extra de "gerar relatório".
+ */
 export async function getPatientReportDocument(businessId: string, patientId: string): Promise<PatientReportDocument> {
   const patient = await prisma.patient.findFirst({
     where: { id: patientId, businessId, deletedAt: null },
@@ -200,9 +204,9 @@ export async function getPatientReportDocument(businessId: string, patientId: st
       birthDate: true,
       business: { select: { name: true, crp: true, whatsapp: true, address: true, logoUrl: true, timezone: true } },
       sessions: {
-        where: { report: { is: { deletedAt: null } } },
+        where: { note: { is: { deletedAt: null, content: { not: null } } } },
         orderBy: { startAt: "asc" },
-        select: { startAt: true, report: { select: { content: true } } },
+        select: { startAt: true, note: { select: { content: true } } },
       },
     },
   });
@@ -219,8 +223,8 @@ export async function getPatientReportDocument(businessId: string, patientId: st
     entries: patient.sessions.map((s, index) => ({
       sessionNumber: index + 1,
       date: utcToLocalDate(s.startAt, business.timezone),
-      // report nunca é null aqui (filtrado no where acima).
-      content: decryptText(s.report!.content),
+      // note.content nunca é null aqui (filtrado no where acima).
+      content: decryptText(s.note!.content!),
     })),
   };
 }

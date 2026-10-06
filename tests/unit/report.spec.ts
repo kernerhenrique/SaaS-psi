@@ -8,25 +8,22 @@ const base: ReportContext = {
   sessionDate: "2026-09-10",
   sessionTypeName: "Retorno",
   guardian: { name: "Juliana Lima", relationship: "Mãe" },
-  parentReport: "Mãe relata que ele tem acordado várias vezes à noite.",
-  patientSession: "Mais agitado no início; acalmou com o jogo de tabuleiro.",
-  followUps: ["Verificar se melhorou o sono"],
+  noteContent: "Mãe relata que ele tem acordado várias vezes à noite. Mais agitado no início; acalmou com o jogo de tabuleiro.",
 };
 
 describe("buildReportDraft", () => {
-  it("monta as seções com os dados da consulta e as anotações", () => {
+  it("monta a identificação com os dados da consulta e a anotação", () => {
     const draft = buildReportDraft(base);
     expect(draft).toContain("Paciente: Pedro Henrique Lima, 11 anos");
     expect(draft).toContain("Responsável: Juliana Lima (mãe)");
     expect(draft).toContain("Atendimento: retorno em 10/09/2026");
-    expect(draft).toContain(`${REPORT_SECTIONS.demand}\nMãe relata que ele tem acordado`);
-    expect(draft).toContain(`${REPORT_SECTIONS.procedure}\nMais agitado no início`);
-    expect(draft).toContain("- Verificar se melhorou o sono");
+    expect(draft).toContain(`${REPORT_SECTIONS.identification}\nPaciente:`);
+    expect(draft).toContain("Mãe relata que ele tem acordado");
   });
 
   it("deixa um lembrete para completar quando falta anotação", () => {
-    const draft = buildReportDraft({ ...base, parentReport: null, followUps: [], guardian: null, patientAge: null });
-    expect(draft).toContain(`${REPORT_SECTIONS.demand}\n(sem anotação — complete aqui)`);
+    const draft = buildReportDraft({ ...base, noteContent: null, guardian: null, patientAge: null });
+    expect(draft).toContain("(sem anotação — complete aqui)");
     expect(draft).not.toContain("Responsável:");
     expect(draft).toContain("Paciente: Pedro Henrique Lima\n");
   });
