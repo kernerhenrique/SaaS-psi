@@ -226,6 +226,38 @@ export async function setSessionStatus(businessId: string, sessionId: string, st
   );
 }
 
+/**
+ * Exclui a consulta de vez (diferente de cancelar): só quando ela ainda não
+ * tem anotação nem relatório, para nunca apagar prontuário. Serve para
+ * corrigir consultas lançadas por engano (dia errado, paciente errado,
+ * duplicada).
+ */
+export async function deleteSession(businessId: string, sessionId: string): Promise<void> {
+  const session = await prisma.session.findFirst({
+    where: { id: sessionId, businessId },
+    select: {
+      id: true,
+      note: { select: { id: true, content: true, deletedAt: true } },
+      report: { select: { id: true, deletedAt: true } },
+    },
+  });
+  if (!session) throw new NotFoundError("Consulta não encontrada");
+
+  const hasNote = Boolean(session.note && !session.note.deletedAt && session.note.content);
+  const hasReport = Boolean(session.report && !session.report.deletedAt);
+  if (hasNote || hasReport) {
+    throw new ValidationError(
+      "Esta consulta já tem anotação ou relatório — para manter o prontuário, cancele em vez de excluir.",
+    );
+  }
+
+  await prisma.$transaction([
+    ...(session.note ? [prisma.sessionNote.delete({ where: { id: session.note.id } })] : []),
+    ...(session.report ? [prisma.sessionReport.delete({ where: { id: session.report.id } })] : []),
+    prisma.session.delete({ where: { id: sessionId } }),
+  ]);
+}
+
 export async function updateSessionPayment(businessId: string, sessionId: string, input: PaymentInput) {
   await findSession(businessId, sessionId);
   await prisma.session.update({

@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CalendarClock, CheckCircle2, FileText, RotateCcw, UserX, Wallet, XCircle } from "lucide-react";
+import { CalendarClock, CheckCircle2, FileText, RotateCcw, Trash2, UserX, Wallet, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "cn";
 
@@ -106,6 +106,17 @@ function SessionDetails({
   async function savePayment(values: PaymentValues): Promise<string | null> {
     const result = await apiRequest(`/api/admin/sessions/${session.id}/payment`, "PATCH", values);
     return result.ok ? null : result.error;
+  }
+
+  async function deleteThisSession() {
+    const result = await apiRequest(`/api/admin/sessions/${session.id}`, "DELETE");
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success("Consulta excluída");
+    onClose();
+    router.refresh();
   }
 
   const reminder = renderMessageTemplate(reminderTemplate, {
@@ -264,7 +275,12 @@ function SessionDetails({
                 {session.status === "NO_SHOW" ? "Desfazer falta" : "Voltar para agendada"}
               </Button>
             )}
+            <ConfirmButton label="Excluir consulta" icon={<Trash2 />} onConfirm={deleteThisSession} />
           </div>
+          <p className="text-right text-xs text-muted-foreground">
+            Excluir é para quando a consulta foi lançada errada (dia, horário ou paciente trocado) — ela some de vez.
+            Se já aconteceu ou tem anotação, cancele em vez de excluir.
+          </p>
         </div>
       )}
     </>

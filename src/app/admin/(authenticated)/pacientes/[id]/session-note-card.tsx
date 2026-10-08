@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { FileText, Mic, NotebookPen, Pencil, XCircle } from "lucide-react";
+import { FileText, Mic, NotebookPen, Pencil, Trash2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { ConfirmButton } from "@/components/confirm-button";
@@ -104,6 +104,21 @@ function SessionNoteCard({
                   return;
                 }
                 toast.success("Consulta cancelada");
+                onChanged();
+              }}
+            />
+          ) : null}
+          {!session.note?.content ? (
+            <ConfirmButton
+              label="Excluir consulta"
+              icon={<Trash2 />}
+              onConfirm={async () => {
+                const result = await apiRequest(`/api/admin/sessions/${session.id}`, "DELETE");
+                if (!result.ok) {
+                  toast.error(result.error);
+                  return;
+                }
+                toast.success("Consulta excluída");
                 onChanged();
               }}
             />
