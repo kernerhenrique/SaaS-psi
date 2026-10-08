@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Crimson_Pro, Geist_Mono, Inter } from "next/font/google";
 
 import { Toaster } from "@/components/ui/sonner";
@@ -25,6 +25,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: { default: "Consultório", template: "%s · Consultório" },
   description: "Agenda, prontuário e financeiro para psicólogas.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { title: "Consultório", statusBarStyle: "default" },
+  icons: { apple: "/icons/apple-touch-icon.png" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#f6f2ec",
+  // Deixa o conteúdo ir até a borda (notch/barra de gestos) para o padding de
+  // "área segura" funcionar no modo app (instalado) — ver BottomNav.
+  viewportFit: "cover",
 };
 
 // Aplica o tema salvo (ou a preferência do sistema) antes da primeira pintura,
