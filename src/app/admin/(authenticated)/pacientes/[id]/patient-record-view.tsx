@@ -10,7 +10,6 @@ import {
   HeartPulse,
   MessageCircle,
   Pencil,
-  Repeat,
   Sparkles,
   Star,
   UserRound,
@@ -45,8 +44,6 @@ export function PatientRecordView({
   const router = useRouter();
   const refresh = () => router.refresh();
 
-  const firstVisitSessions = record.sessions.filter((s) => s.isFirstVisit);
-  const returnSessions = record.sessions.filter((s) => !s.isFirstVisit);
   const openFollowUps = record.followUps.filter((f) => !f.doneAt).length;
 
   return (
@@ -134,13 +131,9 @@ export function PatientRecordView({
               <Users />
               Contato com os pais
             </TabsTab>
-            <TabsTab value="primeira">
+            <TabsTab value="consultas">
               <ClipboardList />
-              Primeira consulta
-            </TabsTab>
-            <TabsTab value="retornos">
-              <Repeat />
-              Retornos{returnSessions.length ? ` (${returnSessions.length})` : ""}
+              Consultas{record.sessions.length ? ` (${record.sessions.length})` : ""}
             </TabsTab>
             <TabsTab value="destaques">
               <Sparkles />
@@ -190,25 +183,14 @@ export function PatientRecordView({
             <ParentNotesPanel patientId={record.id} notes={record.parentNotes} today={today} onChanged={refresh} />
           </TabsPanel>
 
-          <TabsPanel value="primeira">
+          <TabsPanel value="consultas">
             <SessionNotesList
-              sessions={firstVisitSessions}
+              sessions={record.sessions}
               patientId={record.id}
               today={today}
               aiEnabled={aiEnabled}
               onChanged={refresh}
-              emptyText="A primeira consulta ainda não foi marcada. Quando você marcar na agenda, as anotações aparecem aqui."
-            />
-          </TabsPanel>
-
-          <TabsPanel value="retornos">
-            <SessionNotesList
-              sessions={returnSessions}
-              patientId={record.id}
-              today={today}
-              aiEnabled={aiEnabled}
-              onChanged={refresh}
-              emptyText="Nenhuma consulta de retorno ainda."
+              emptyText="Nenhuma consulta marcada ainda. Quando você marcar na agenda, as anotações aparecem aqui."
             />
           </TabsPanel>
 

@@ -2,9 +2,10 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { FileText, Mic, NotebookPen, Pencil } from "lucide-react";
+import { FileText, Mic, NotebookPen, Pencil, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
+import { ConfirmButton } from "@/components/confirm-button";
 import { EmptyState } from "@/components/empty-state";
 import { StatusBadge } from "@/components/status-badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -91,6 +92,21 @@ function SessionNoteCard({
                 Relatório
               </Link>
             </>
+          ) : null}
+          {session.status === "SCHEDULED" ? (
+            <ConfirmButton
+              label="Cancelar consulta"
+              icon={<XCircle />}
+              onConfirm={async () => {
+                const result = await apiRequest(`/api/admin/sessions/${session.id}/status`, "PATCH", { status: "CANCELLED" });
+                if (!result.ok) {
+                  toast.error(result.error);
+                  return;
+                }
+                toast.success("Consulta cancelada");
+                onChanged();
+              }}
+            />
           ) : null}
         </div>
       </header>

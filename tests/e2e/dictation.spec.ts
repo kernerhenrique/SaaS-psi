@@ -65,7 +65,7 @@ test("dita a anotação, usa sem IA e salva no prontuário", async ({ page }) =>
   expect((await organize.json()).error).toContain("chave da Anthropic");
 
   await page.goto(`/admin/pacientes/${patientId}`);
-  await page.getByRole("tab", { name: "Primeira consulta" }).click();
+  await page.getByRole("tab", { name: /Consultas/ }).click();
   await page.getByRole("button", { name: "Ditar anotações" }).click();
 
   // Dita (concatena as duas frases, já que agora é um bloco só) e para.

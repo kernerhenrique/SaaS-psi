@@ -13,7 +13,7 @@ test("gera o relatório a partir das anotações, salva e manda imprimir", async
   // Entra pela ficha: a consulta anotada do Pedro tem o botão "Relatório".
   await page.goto("/admin/pacientes");
   await page.getByText("Pedro Henrique Lima").click();
-  await page.getByRole("tab", { name: /Retornos/ }).click();
+  await page.getByRole("tab", { name: /Consultas/ }).click();
   await page.getByRole("link", { name: "Relatório", exact: true }).first().click();
   await expect(page.getByRole("heading", { name: "Relatório", exact: true, level: 1 })).toBeVisible();
 
