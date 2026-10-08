@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Search, UserPlus } from "lucide-react";
+import { Search, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "cn";
 
@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Segmented } from "@/components/ui/segmented";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiRequest } from "@/lib/api-client";
 import { centsToInput, formatPriceFromCents, inputToCents } from "@/lib/currency";
 import type { AgendaOptions } from "@/server/modules/session/session.service";
@@ -205,33 +205,34 @@ function NewSessionForm({
       </div>
 
       <div className="grid gap-2">
-        <Label>Tipo de consulta</Label>
-        <Segmented
-          label="Tipo de consulta"
+        <Label htmlFor="session-type">Tipo de consulta</Label>
+        <Select
+          items={options.sessionTypes.map((t) => ({ value: t.id, label: `${t.name} · ${formatPriceFromCents(t.priceCents)}` }))}
           value={selectedType?.id ?? null}
-          onChange={(id) => {
+          onValueChange={(id) => {
             setTypeId(id);
             setAmount(null);
             setDuration(null);
           }}
-          options={options.sessionTypes.map((t) => ({
-            value: t.id,
-            label: (
-              <span className="inline-flex items-center gap-1.5">
-                {t.name}
-                {suggestedType?.id === t.id && !typeId ? <Check className="size-3.5" /> : null}
-              </span>
-            ),
-            hint: formatPriceFromCents(t.priceCents),
-          }))}
-        />
+        >
+          <SelectTrigger id="session-type" className="w-full">
+            <SelectValue placeholder="Escolha o tipo de consulta" />
+          </SelectTrigger>
+          <SelectContent>
+            {options.sessionTypes.map((t) => (
+              <SelectItem key={t.id} value={t.id}>
+                {t.name} · {formatPriceFromCents(t.priceCents)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {suggestedType && !typeId ? (
-          <p className="text-xs text-muted-foreground">Sugerido pelo histórico do paciente. Você pode trocar.</p>
+          <p className="text-xs text-muted-foreground">Sugerido pelo histórico do paciente ({suggestedType.name}). Você pode trocar.</p>
         ) : null}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="col-span-2 grid gap-1.5">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+        <div className="sm:col-span-2 grid gap-1.5">
           <Label htmlFor="session-date">Data</Label>
           <Input id="session-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
         </div>
