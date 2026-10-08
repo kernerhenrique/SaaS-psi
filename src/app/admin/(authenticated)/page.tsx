@@ -115,7 +115,7 @@ export default async function DashboardPage() {
       </FadeIn>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <FadeIn delay={0.1} className="lg:col-span-2">
+        <FadeIn delay={0.1} className="min-w-0 lg:col-span-2">
           <Section title="Consultas de hoje" description="Copie o lembrete para enviar aos pais antes da consulta.">
             {data.todaySessions.length === 0 ? (
               <EmptyState
@@ -168,7 +168,7 @@ export default async function DashboardPage() {
           </Section>
         </FadeIn>
 
-        <FadeIn delay={0.15}>
+        <FadeIn delay={0.15} className="min-w-0">
           <Section
             title="Para acompanhar"
             description="Pontos que você destacou nas últimas sessões."
@@ -201,7 +201,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <FadeIn delay={0.2}>
+        <FadeIn delay={0.2} className="min-w-0">
           <Section
             title="Pagamentos pendentes"
             description={`Depois de ${plural(data.paymentReminderDays, "dia", "dias")}, sugerimos uma mensagem de cobrança.`}
@@ -251,7 +251,7 @@ export default async function DashboardPage() {
           </Section>
         </FadeIn>
 
-        <FadeIn delay={0.25}>
+        <FadeIn delay={0.25} className="min-w-0">
           <Section
             title="Aguardando retorno"
             description={`Sem próxima consulta há ${RETURN_INVITE_AFTER_DAYS} dias ou mais. Que tal perguntar aos pais?`}

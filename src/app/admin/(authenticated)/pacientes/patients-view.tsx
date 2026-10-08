@@ -83,7 +83,7 @@ export function PatientsView({ patients }: { patients: PatientListItem[] }) {
           ) : (
             <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {filtered.map((p) => (
-                <li key={p.id}>
+                <li key={p.id} className="min-w-0">
                   <Link
                     href={`/admin/pacientes/${p.id}`}
                     className="group flex h-full items-center gap-4 rounded-2xl bg-card p-4 shadow-soft ring-1 ring-foreground/5 transition hover:-translate-y-0.5 hover:ring-primary/30 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
